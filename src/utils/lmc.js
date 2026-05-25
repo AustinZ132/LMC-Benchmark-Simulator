@@ -134,14 +134,10 @@ export class LMC {
       case 1: // ADD
         this.accumulator += this.memory[operand];
         this.metrics.memoryAccess++;
-        if (this.accumulator > 999) this.accumulator = 999;
-        if (this.accumulator < -999) this.accumulator = -999;
         break;
       case 2: // SUB
         this.accumulator -= this.memory[operand];
         this.metrics.memoryAccess++;
-        if (this.accumulator > 999) this.accumulator = 999;
-        if (this.accumulator < -999) this.accumulator = -999;
         break;
       case 3: // STA
         this.memory[operand] = this.accumulator;
@@ -150,8 +146,6 @@ export class LMC {
       case 4: // MUL
         this.accumulator *= this.memory[operand];
         this.metrics.memoryAccess++;
-        if (this.accumulator > 999) this.accumulator = 999;
-        if (this.accumulator < -999) this.accumulator = -999;
         break;
       case 5: // LDA
         this.accumulator = this.memory[operand];

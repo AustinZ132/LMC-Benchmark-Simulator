@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
-import { Terminal, Zap, ChevronRight, Cpu, ArrowRight } from 'lucide-react';
+import { Terminal, Zap, ArrowRight, Cpu, Binary, Hash, Database, HardDrive, MemoryStick } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function Hero() {
@@ -10,12 +10,9 @@ export default function Hero() {
   const heroRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
-  const menuRef = useRef(null);
-  const gridRef = useRef(null);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Title animation
       gsap.from(titleRef.current, {
         y: 60,
         opacity: 0,
@@ -23,7 +20,6 @@ export default function Hero() {
         ease: 'power3.out'
       });
 
-      // Subtitle animation
       gsap.from(subtitleRef.current, {
         y: 40,
         opacity: 0,
@@ -32,7 +28,6 @@ export default function Hero() {
         ease: 'power3.out'
       });
 
-      // Menu cards animation
       gsap.from('.menu-card', {
         y: 80,
         opacity: 0,
@@ -42,7 +37,6 @@ export default function Hero() {
         ease: 'power3.out'
       });
 
-      // Grid items animation
       gsap.from('.grid-item', {
         scale: 0.8,
         opacity: 0,
@@ -52,7 +46,6 @@ export default function Hero() {
         ease: 'back.out(1.7)'
       });
 
-      // Floating animation for grid items
       gsap.to('.grid-item', {
         y: -10,
         duration: 2,
@@ -89,21 +82,20 @@ export default function Hero() {
   ];
 
   const gridItems = [
-    { icon: '📊', label: 'O(1)' },
-    { icon: '🔄', label: 'O(n)' },
-    { icon: '📈', label: 'O(n²)' },
-    { icon: '🧮', label: 'LMC' },
-    { icon: '⚡', label: 'CPU' },
-    { icon: '💾', label: 'RAM' },
-    { icon: '🔧', label: 'ALU' },
-    { icon: '📋', label: 'IR' },
-    { icon: '🔢', label: 'PC' }
+    { icon: <Hash size={20} />, label: 'O(1)' },
+    { icon: <Binary size={20} />, label: 'O(n)' },
+    { icon: <Database size={20} />, label: 'O(n2)' },
+    { icon: <Cpu size={20} />, label: 'LMC' },
+    { icon: <Zap size={20} />, label: 'CPU' },
+    { icon: <HardDrive size={20} />, label: 'RAM' },
+    { icon: <Cpu size={20} />, label: 'ALU' },
+    { icon: <MemoryStick size={20} />, label: 'IR' },
+    { icon: <Hash size={20} />, label: 'PC' }
   ];
 
   return (
     <section ref={heroRef} className="hero-section">
-      {/* Background grid decoration */}
-      <div className="hero-bg-grid" ref={gridRef}>
+      <div className="hero-bg-grid">
         {gridItems.map((item, index) => (
           <div key={index} className="grid-item">
             <span className="grid-icon">{item.icon}</span>
@@ -128,13 +120,11 @@ export default function Hero() {
             : 'Deep dive into von Neumann architecture, algorithm complexity and performance analysis through Little Man Computer'}
         </p>
 
-        <div ref={menuRef} className="menu-grid">
+        <div className="menu-grid">
           {menuItems.map((item, index) => (
             <Link key={index} to={item.link} className="menu-card" style={{ '--card-gradient': item.gradient }}>
-              <div className="menu-icon-wrapper">
-                <div className="menu-icon" style={{ color: item.color }}>
-                  {item.icon}
-                </div>
+              <div className="menu-icon" style={{ color: item.color }}>
+                {item.icon}
               </div>
               <div className="menu-info">
                 <h3 className="menu-title">{item.title}</h3>
@@ -149,9 +139,9 @@ export default function Hero() {
 
         <div className="hero-footer">
           <span className="footer-tag">Fetch-Decode-Execute</span>
-          <span className="footer-divider">•</span>
-          <span className="footer-tag">Von Neumann Architecture</span>
-          <span className="footer-divider">•</span>
+          <span className="footer-divider">·</span>
+          <span className="footer-tag">Von Neumann</span>
+          <span className="footer-divider">·</span>
           <span className="footer-tag">Algorithm Complexity</span>
         </div>
       </div>
