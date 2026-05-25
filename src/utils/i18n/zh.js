@@ -4,6 +4,7 @@ export const zh = {
     subtitle: '基于小人计算机的算法复杂度分析'
   },
   nav: {
+    home: '首页',
     editor: '编辑器',
     benchmark: '基准测试',
     analysis: '分析',
@@ -66,9 +67,25 @@ export const zh = {
       name: '乘法模拟',
       description: '通过重复加法实现 A×B'
     },
+    factorial: {
+      name: '阶乘计算',
+      description: '计算 N 的阶乘 (N!)'
+    },
+    fibonacci: {
+      name: '斐波那契数列',
+      description: '计算第 N 个斐波那契数'
+    },
     bubbleSort: {
       name: '冒泡排序',
       description: '对数组进行冒泡排序（需要自修改代码）'
+    },
+    linearSearch: {
+      name: '线性搜索',
+      description: '在数组中线性搜索目标值'
+    },
+    power: {
+      name: '幂运算',
+      description: '计算 Base 的 Exp 次方'
     }
   },
   labels: {

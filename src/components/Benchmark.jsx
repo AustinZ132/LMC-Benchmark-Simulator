@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
-import { Play, Loader } from 'lucide-react';
+import { Play, Loader, Square } from 'lucide-react';
 
 export default function Benchmark() {
   const { t } = useI18n();
-  const { isRunning, progress, status, statusText, runBenchmark } = useBenchmark();
+  const { isRunning, progress, status, statusText, runBenchmark, resetBenchmark } = useBenchmark();
   const [algorithm, setAlgorithm] = useState('simpleArithmetic');
   const [inputSize, setInputSize] = useState(10);
 
@@ -17,23 +17,26 @@ export default function Benchmark() {
     await runBenchmark(algorithm, inputSize);
   };
 
+  const handleStop = () => {
+    resetBenchmark();
+  };
+
   return (
     <section id="benchmark" className="section">
       <div className="section-header">
         <h2 className="section-title">{t('benchmark.title')}</h2>
         <div className="section-actions">
-          <button
-            onClick={handleRun}
-            disabled={isRunning}
-            className="button-primary"
-          >
-            {isRunning ? (
-              <Loader size={16} className="spinner" />
-            ) : (
+          {isRunning ? (
+            <button onClick={handleStop} className="button-primary" style={{ backgroundColor: '#ee0000' }}>
+              <Square size={16} />
+              <span>{t('editor.stop')}</span>
+            </button>
+          ) : (
+            <button onClick={handleRun} className="button-primary">
               <Play size={16} />
-            )}
-            <span>{t('benchmark.runTest')}</span>
-          </button>
+              <span>{t('benchmark.runTest')}</span>
+            </button>
+          )}
         </div>
       </div>
       <div className="benchmark-controls">
@@ -60,9 +63,12 @@ export default function Benchmark() {
             className="form-input"
             disabled={isRunning}
           >
+            <option value={5}>5</option>
             <option value={10}>10</option>
+            <option value={20}>20</option>
             <option value={50}>50</option>
             <option value={100}>100</option>
+            <option value={200}>200</option>
             <option value={500}>500</option>
             <option value={1000}>1000</option>
           </select>
@@ -71,7 +77,7 @@ export default function Benchmark() {
           <div className="algorithm-info">
             <p className="algorithm-name">{t(selectedAlgorithm.nameKey)}</p>
             <p className="algorithm-description">{t(selectedAlgorithm.descKey)}</p>
-            <p className="algorithm-complexity">Complexity: {selectedAlgorithm.complexity}</p>
+            <span className="algorithm-complexity">{selectedAlgorithm.complexity}</span>
           </div>
         )}
       </div>

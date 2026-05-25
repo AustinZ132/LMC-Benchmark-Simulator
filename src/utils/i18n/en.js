@@ -4,6 +4,7 @@ export const en = {
     subtitle: 'Algorithm Complexity Analysis based on Little Man Computer'
   },
   nav: {
+    home: 'Home',
     editor: 'Editor',
     benchmark: 'Benchmark',
     analysis: 'Analysis',
@@ -66,9 +67,25 @@ export const en = {
       name: 'Multiplication Simulation',
       description: 'Implement A×B via repeated addition'
     },
+    factorial: {
+      name: 'Factorial',
+      description: 'Calculate N factorial (N!)'
+    },
+    fibonacci: {
+      name: 'Fibonacci Sequence',
+      description: 'Calculate the Nth Fibonacci number'
+    },
     bubbleSort: {
       name: 'Bubble Sort',
       description: 'Sort array using bubble sort (requires SMC)'
+    },
+    linearSearch: {
+      name: 'Linear Search',
+      description: 'Search for target value in array'
+    },
+    power: {
+      name: 'Power',
+      description: 'Calculate Base raised to Exp power'
     }
   },
   labels: {
