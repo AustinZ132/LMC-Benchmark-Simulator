@@ -1,14 +1,16 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useI18n } from '../context/I18nContext';
-import { Play, RotateCcw, Copy, Check, ChevronDown, BookOpen } from 'lucide-react';
+import { Play, RotateCcw, Copy, Check, ChevronDown, Terminal } from 'lucide-react';
 import { LMC } from '../utils/lmc';
 
 const PRESETS = {
   addition: {
-    name: 'Addition (A+B)',
-    description: 'Input two numbers and add them',
-    code: `; Addition: Input two numbers and add them
-; Input: 5, 3 → Output: 8
+    name: '加法 (A+B)',
+    nameEn: 'Addition (A+B)',
+    description: '输入两个数并相加',
+    descriptionEn: 'Input two numbers and add them',
+    code: `; 加法: 输入两个数并相加
+; 输入: 5, 3 → 输出: 8
 
 INP
 STA A
@@ -20,10 +22,12 @@ HLT
 A DAT 0`
   },
   loop: {
-    name: 'Loop Sum (1 to N)',
-    description: 'Calculate sum from 1 to N',
-    code: `; Loop: Calculate sum from 1 to N
-; Input: 10 → Output: 55
+    name: '循环求和 (1到N)',
+    nameEn: 'Loop Sum (1 to N)',
+    description: '计算1到N的累加和',
+    descriptionEn: 'Calculate sum from 1 to N',
+    code: `; 循环求和: 计算1到N的和
+; 输入: 10 → 输出: 55
 
 INP
 STA N
@@ -43,10 +47,12 @@ N DAT 0
 ONE DAT 1`
   },
   multiply: {
-    name: 'Multiply (A×B)',
-    description: 'A times B using repeated addition',
-    code: `; Multiply: A times B
-; Input: 4, 5 → Output: 20
+    name: '乘法 (A×B)',
+    nameEn: 'Multiply (A×B)',
+    description: '通过重复加法实现乘法',
+    descriptionEn: 'A times B using repeated addition',
+    code: `; 乘法: A乘以B
+; 输入: 4, 5 → 输出: 20
 
 INP
 STA A
@@ -69,10 +75,12 @@ RESULT DAT 0
 ONE DAT 1`
   },
   factorial: {
-    name: 'Factorial (N!)',
-    description: 'Calculate N factorial',
-    code: `; Factorial: Calculate N!
-; Input: 5 → Output: 120
+    name: '阶乘 (N!)',
+    nameEn: 'Factorial (N!)',
+    description: '计算N的阶乘',
+    descriptionEn: 'Calculate N factorial',
+    code: `; 阶乘: 计算N!
+; 输入: 5 → 输出: 120
 
 INP
 STA N
@@ -94,10 +102,12 @@ RESULT DAT 0
 ONE DAT 1`
   },
   fibonacci: {
-    name: 'Fibonacci',
-    description: 'Calculate Nth Fibonacci number',
-    code: `; Fibonacci: Nth number
-; Input: 10 → Output: 55
+    name: '斐波那契数列',
+    nameEn: 'Fibonacci',
+    description: '计算第N个斐波那契数',
+    descriptionEn: 'Calculate Nth Fibonacci number',
+    code: `; 斐波那契: 第N个数
+; 输入: 10 → 输出: 55
 
 INP
 STA N
@@ -127,10 +137,12 @@ ZERO DAT 0
 ONE DAT 1`
   },
   counter: {
-    name: 'Counter (1 to N)',
-    description: 'Print numbers 1 to N',
-    code: `; Counter: Print 1 to N
-; Input: 5 → Output: 1,2,3,4,5
+    name: '计数器 (1到N)',
+    nameEn: 'Counter (1 to N)',
+    description: '打印1到N的数字',
+    descriptionEn: 'Print numbers 1 to N',
+    code: `; 计数器: 打印1到N
+; 输入: 5 → 输出: 1,2,3,4,5
 
 INP
 STA N
@@ -151,10 +163,12 @@ COUNT DAT 0
 ONE DAT 1`
   },
   max: {
-    name: 'Find Maximum',
-    description: 'Find max of two numbers',
-    code: `; Find Maximum of two numbers
-; Input: 7, 9 → Output: 9
+    name: '求最大值',
+    nameEn: 'Find Maximum',
+    description: '找出两个数中的最大值',
+    descriptionEn: 'Find max of two numbers',
+    code: `; 求最大值: 两个数中的最大值
+; 输入: 7, 9 → 输出: 9
 
 INP
 STA A
@@ -175,8 +189,9 @@ B DAT 0`
 };
 
 export default function Editor() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const [code, setCode] = useState(PRESETS.addition.code);
+  const [inputs, setInputs] = useState('5\n3');
   const [output, setOutput] = useState('');
   const [copied, setCopied] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
@@ -186,19 +201,21 @@ export default function Editor() {
     const lmc = new LMC();
     try {
       lmc.loadCode(code);
-      const inputMatch = code.match(/INP/g);
-      const inputCount = inputMatch ? inputMatch.length : 0;
-      const inputs = Array.from({ length: inputCount }, (_, i) => i + 1);
-      lmc.setInput(inputs);
+      
+      const inputLines = inputs.split('\n').filter(line => line.trim() !== '');
+      const inputValues = inputLines.map(line => parseInt(line.trim()) || 0);
+      lmc.setInput(inputValues);
+      
       const result = lmc.run();
-      setOutput(result.output.join('\n') || 'No output');
+      setOutput(result.output.join('\n') || t('messages.noOutput') || 'No output');
     } catch (error) {
       setOutput(`Error: ${error.message}`);
     }
-  }, [code]);
+  }, [code, inputs, t]);
 
   const handleReset = useCallback(() => {
     setCode(PRESETS.addition.code);
+    setInputs('5\n3');
     setOutput('');
   }, []);
 
@@ -209,7 +226,15 @@ export default function Editor() {
   }, [code]);
 
   const handlePresetSelect = useCallback((presetKey) => {
-    setCode(PRESETS[presetKey].code);
+    const preset = PRESETS[presetKey];
+    setCode(preset.code);
+    
+    const inputMatch = preset.code.match(/输入[：:]\s*(.+?)[\s→]/);
+    if (inputMatch) {
+      const inputStr = inputMatch[1].replace(/,/g, '\n');
+      setInputs(inputStr);
+    }
+    
     setShowPresets(false);
     setOutput('');
   }, []);
@@ -228,12 +253,14 @@ export default function Editor() {
     }
   }, [code]);
 
+  const isZh = lang === 'zh';
+
   return (
     <section id="editor" className="section">
       <div className="section-header">
         <h2 className="section-title">
-          <BookOpen size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-          {t('editor.title')}
+          <Terminal size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          {isZh ? 'LMC 模拟器' : 'LMC Simulator'}
         </h2>
         <div className="section-actions">
           <div className="preset-dropdown">
@@ -242,7 +269,7 @@ export default function Editor() {
               className="button-secondary-sm"
             >
               <ChevronDown size={14} />
-              <span>Presets</span>
+              <span>{isZh ? '预设代码' : 'Presets'}</span>
             </button>
             {showPresets && (
               <div className="preset-menu">
@@ -252,8 +279,8 @@ export default function Editor() {
                     onClick={() => handlePresetSelect(key)}
                     className="preset-item"
                   >
-                    <span className="preset-name">{preset.name}</span>
-                    <span className="preset-desc">{preset.description}</span>
+                    <span className="preset-name">{isZh ? preset.name : preset.nameEn}</span>
+                    <span className="preset-desc">{isZh ? preset.description : preset.descriptionEn}</span>
                   </button>
                 ))}
               </div>
@@ -261,15 +288,15 @@ export default function Editor() {
           </div>
           <button onClick={handleCopy} className="button-secondary-sm">
             {copied ? <Check size={16} /> : <Copy size={16} />}
-            <span>{copied ? 'Copied!' : 'Copy'}</span>
+            <span>{copied ? (isZh ? '已复制' : 'Copied') : (isZh ? '复制' : 'Copy')}</span>
           </button>
           <button onClick={handleRun} className="button-primary-sm">
             <Play size={16} />
-            <span>{t('editor.run')}</span>
+            <span>{isZh ? '运行' : 'Run'}</span>
           </button>
           <button onClick={handleReset} className="button-secondary-sm">
             <RotateCcw size={16} />
-            <span>{t('editor.reset')}</span>
+            <span>{isZh ? '重置' : 'Reset'}</span>
           </button>
         </div>
       </div>
@@ -277,7 +304,7 @@ export default function Editor() {
         <div className="editor-panel">
           <div className="editor-header">
             <span className="editor-filename">program.lmc</span>
-            <span className="editor-hint">Tab to indent</span>
+            <span className="editor-hint">{isZh ? 'Tab 缩进' : 'Tab to indent'}</span>
           </div>
           <textarea
             ref={textareaRef}
@@ -285,19 +312,34 @@ export default function Editor() {
             value={code}
             onChange={(e) => setCode(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder={t('editor.placeholder')}
+            placeholder={isZh ? '在此输入 LMC 代码...' : 'Enter LMC code here...'}
             spellCheck={false}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
           />
         </div>
-        <div className="output-panel">
-          <div className="output-header">
-            <span className="output-title">Output</span>
+        <div className="io-panel">
+          <div className="input-panel">
+            <div className="panel-header">
+              <span className="panel-title">{isZh ? '输入' : 'Input'}</span>
+              <span className="panel-hint">{isZh ? '每行一个数字' : 'One number per line'}</span>
+            </div>
+            <textarea
+              className="input-editor"
+              value={inputs}
+              onChange={(e) => setInputs(e.target.value)}
+              placeholder={isZh ? '输入数据...\n例如：5\n3' : 'Input data...\nExample: 5\n3'}
+              spellCheck={false}
+            />
           </div>
-          <div className="output-content">
-            <pre>{output || '// Click "Run" to execute'}</pre>
+          <div className="output-panel">
+            <div className="panel-header">
+              <span className="panel-title">{isZh ? '输出' : 'Output'}</span>
+            </div>
+            <div className="output-content">
+              <pre>{output || (isZh ? '// 点击"运行"执行程序' : '// Click "Run" to execute')}</pre>
+            </div>
           </div>
         </div>
       </div>

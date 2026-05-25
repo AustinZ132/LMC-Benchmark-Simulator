@@ -3,11 +3,12 @@ import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
+import { BarChart3, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
 
 Chart.register(...registerables, zoomPlugin);
 
 export default function Charts() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const { results } = useBenchmark();
   const complexityChartRef = useRef(null);
   const memoryChartRef = useRef(null);
@@ -17,6 +18,7 @@ export default function Charts() {
   const comparisonInstance = useRef(null);
   const [selectedAlgorithms, setSelectedAlgorithms] = useState([]);
 
+  const isZh = lang === 'zh';
   const algorithms = [...new Set(results.map(r => r.algorithmId))];
 
   useEffect(() => {
@@ -80,8 +82,7 @@ export default function Charts() {
       zoom: {
         wheel: { enabled: true },
         pinch: { enabled: true },
-        mode: 'xy',
-        onZoomComplete: () => {}
+        mode: 'xy'
       }
     };
 
@@ -109,11 +110,11 @@ export default function Charts() {
           scales: {
             x: {
               type: 'linear',
-              title: { display: true, text: t('charts.inputSize') },
+              title: { display: true, text: isZh ? '输入规模' : 'Input Size' },
               grid: { color: '#ebebeb' }
             },
             y: {
-              title: { display: true, text: t('metrics.instructions') },
+              title: { display: true, text: isZh ? '指令执行次数' : 'Instruction Count' },
               grid: { color: '#ebebeb' }
             }
           }
@@ -145,11 +146,11 @@ export default function Charts() {
           scales: {
             x: {
               type: 'linear',
-              title: { display: true, text: t('charts.inputSize') },
+              title: { display: true, text: isZh ? '输入规模' : 'Input Size' },
               grid: { color: '#ebebeb' }
             },
             y: {
-              title: { display: true, text: t('metrics.memory') },
+              title: { display: true, text: isZh ? '内存访问次数' : 'Memory Access' },
               grid: { color: '#ebebeb' }
             }
           }
@@ -166,7 +167,12 @@ export default function Charts() {
       comparisonInstance.current = new Chart(comparisonChartRef.current, {
         type: 'radar',
         data: {
-          labels: [t('metrics.instructions'), t('metrics.memory'), t('metrics.branches'), t('metrics.cycles')],
+          labels: [
+            isZh ? '指令数' : 'Instructions',
+            isZh ? '内存访问' : 'Memory',
+            isZh ? '分支' : 'Branches',
+            isZh ? '周期' : 'Cycles'
+          ],
           datasets: filteredAlgorithms.map((algo, idx) => {
             const r = lastResults[idx];
             const color = colors[idx % colors.length];
@@ -201,7 +207,7 @@ export default function Charts() {
       if (memoryInstance.current) memoryInstance.current.destroy();
       if (comparisonInstance.current) comparisonInstance.current.destroy();
     };
-  }, [results, selectedAlgorithms, t]);
+  }, [results, selectedAlgorithms, isZh]);
 
   const toggleAlgorithm = (algo) => {
     setSelectedAlgorithms(prev =>
@@ -215,10 +221,30 @@ export default function Charts() {
     }
   };
 
+  if (results.length === 0) {
+    return (
+      <section id="analysis" className="section">
+        <div className="section-header">
+          <h2 className="section-title">
+            <BarChart3 size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            {isZh ? '数据分析' : 'Data Analysis'}
+          </h2>
+        </div>
+        <div className="empty-state">
+          <BarChart3 size={48} />
+          <p>{isZh ? '运行基准测试后查看图表' : 'Run a benchmark to see charts'}</p>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section id="analysis" className="section">
       <div className="section-header">
-        <h2 className="section-title">{t('charts.title')}</h2>
+        <h2 className="section-title">
+          <BarChart3 size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          {isZh ? '数据分析' : 'Data Analysis'}
+        </h2>
         {algorithms.length > 0 && (
           <div className="algorithm-filters">
             {algorithms.map(algo => (
@@ -236,32 +262,32 @@ export default function Charts() {
       <div className="charts-grid">
         <div className="chart-container">
           <div className="chart-header">
-            <h3 className="chart-title">{t('charts.complexity')}</h3>
+            <h3 className="chart-title">{isZh ? '复杂度曲线' : 'Complexity Curve'}</h3>
             <button onClick={() => resetZoom(complexityChartRef)} className="button-secondary-sm">
-              Reset Zoom
+              <RotateCcw size={14} />
             </button>
           </div>
           <div className="chart-wrapper">
             <canvas ref={complexityChartRef}></canvas>
           </div>
-          <p className="chart-hint">Scroll to zoom, drag to pan</p>
+          <p className="chart-hint">{isZh ? '滚轮缩放，拖拽平移' : 'Scroll to zoom, drag to pan'}</p>
         </div>
         <div className="chart-container">
           <div className="chart-header">
-            <h3 className="chart-title">{t('charts.memory')}</h3>
+            <h3 className="chart-title">{isZh ? '内存访问模式' : 'Memory Access Pattern'}</h3>
             <button onClick={() => resetZoom(memoryChartRef)} className="button-secondary-sm">
-              Reset Zoom
+              <RotateCcw size={14} />
             </button>
           </div>
           <div className="chart-wrapper">
             <canvas ref={memoryChartRef}></canvas>
           </div>
-          <p className="chart-hint">Scroll to zoom, drag to pan</p>
+          <p className="chart-hint">{isZh ? '滚轮缩放，拖拽平移' : 'Scroll to zoom, drag to pan'}</p>
         </div>
       </div>
       <div className="chart-container comparison-chart">
         <div className="chart-header">
-          <h3 className="chart-title">{t('charts.comparison')}</h3>
+          <h3 className="chart-title">{isZh ? '架构对比' : 'Architecture Comparison'}</h3>
         </div>
         <div className="chart-wrapper chart-wrapper-small">
           <canvas ref={comparisonChartRef}></canvas>

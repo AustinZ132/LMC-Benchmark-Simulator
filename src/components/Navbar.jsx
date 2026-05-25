@@ -6,13 +6,14 @@ import { Globe } from 'lucide-react';
 export default function Navbar() {
   const { t, toggleLang, lang } = useI18n();
   const location = useLocation();
+  const isZh = lang === 'zh';
 
   const navItems = [
-    { path: '/', key: 'home', label: t('nav.home') },
-    { path: '/editor', key: 'editor', label: t('nav.editor') },
-    { path: '/benchmark', key: 'benchmark', label: t('nav.benchmark') },
-    { path: '/analysis', key: 'analysis', label: t('nav.analysis') },
-    { path: '/export', key: 'export', label: t('nav.export') }
+    { path: '/', key: 'home', label: isZh ? '首页' : 'Home' },
+    { path: '/editor', key: 'editor', label: isZh ? '模拟器' : 'Simulator' },
+    { path: '/benchmark', key: 'benchmark', label: isZh ? '基准测试' : 'Benchmark' },
+    { path: '/analysis', key: 'analysis', label: isZh ? '数据分析' : 'Analysis' },
+    { path: '/export', key: 'export', label: isZh ? '导出' : 'Export' }
   ];
 
   return (
@@ -36,7 +37,7 @@ export default function Navbar() {
         <div className="nav-actions">
           <button onClick={toggleLang} className="button-secondary-sm">
             <Globe size={16} />
-            <span>{lang === 'zh' ? 'EN' : '中'}</span>
+            <span>{isZh ? 'EN' : '中'}</span>
           </button>
         </div>
       </div>
