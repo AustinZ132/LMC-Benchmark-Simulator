@@ -6,7 +6,6 @@ import HomePage from './pages/HomePage';
 import EditorPage from './pages/EditorPage';
 import BenchmarkPage from './pages/BenchmarkPage';
 import AnalysisPage from './pages/AnalysisPage';
-import ComparisonPage from './pages/ComparisonPage';
 import ExportPage from './pages/ExportPage';
 import { I18nProvider } from './context/I18nContext';
 import { BenchmarkProvider } from './context/BenchmarkContext';
@@ -24,7 +23,6 @@ function App() {
                 <Route path="/editor" element={<EditorPage />} />
                 <Route path="/benchmark" element={<BenchmarkPage />} />
                 <Route path="/analysis" element={<AnalysisPage />} />
-                <Route path="/comparison" element={<ComparisonPage />} />
                 <Route path="/export" element={<ExportPage />} />
               </Routes>
             </main>
