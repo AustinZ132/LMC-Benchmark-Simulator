@@ -52,17 +52,10 @@ export function getCPUInfo() {
     cpuArch = 'ARM';
   }
   
-  let cpuModel = cpuArch;
-  if (cpuCores >= 16) {
-    cpuModel += ' (' + cpuCores + ' cores)';
-  } else if (cpuCores >= 1) {
-    cpuModel += ' (' + cpuCores + ' cores)';
-  }
-  
   return {
     browser: browser,
     os: os,
-    cpu: cpuModel,
+    cpu: cpuArch,
     cores: cpuCores,
     memory: deviceMemory !== 'Unknown' ? deviceMemory + ' GB' : 'Unknown',
     platform: navigator.platform || 'Unknown',

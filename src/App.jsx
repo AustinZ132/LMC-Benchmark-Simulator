@@ -5,8 +5,6 @@ import Footer from './components/Footer';
 import HomePage from './pages/HomePage';
 import EditorPage from './pages/EditorPage';
 import BenchmarkPage from './pages/BenchmarkPage';
-import AnalysisPage from './pages/AnalysisPage';
-import ExportPage from './pages/ExportPage';
 import { I18nProvider } from './context/I18nContext';
 import { BenchmarkProvider } from './context/BenchmarkContext';
 
@@ -22,8 +20,6 @@ function App() {
                 <Route path="/" element={<HomePage />} />
                 <Route path="/editor" element={<EditorPage />} />
                 <Route path="/benchmark" element={<BenchmarkPage />} />
-                <Route path="/analysis" element={<AnalysisPage />} />
-                <Route path="/export" element={<ExportPage />} />
               </Routes>
             </main>
             <Footer />
