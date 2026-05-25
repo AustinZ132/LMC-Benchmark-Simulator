@@ -12,6 +12,7 @@ export default function Navbar() {
     { path: '/editor', key: 'editor', label: t('nav.editor') },
     { path: '/benchmark', key: 'benchmark', label: t('nav.benchmark') },
     { path: '/analysis', key: 'analysis', label: t('nav.analysis') },
+    { path: '/comparison', key: 'comparison', label: 'Comparison' },
     { path: '/export', key: 'export', label: t('nav.export') }
   ];
 

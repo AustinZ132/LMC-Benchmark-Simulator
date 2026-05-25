@@ -8,6 +8,7 @@ export const zh = {
     editor: '编辑器',
     benchmark: '基准测试',
     analysis: '分析',
+    comparison: '架构对比',
     export: '导出'
   },
   editor: {
@@ -42,6 +43,29 @@ export const zh = {
     inputSize: '输入规模',
     count: '次数',
     algorithm: '算法'
+  },
+  comparison: {
+    title: 'LMC vs 现代CPU架构对比',
+    runComparison: '运行对比',
+    lmc: 'LMC (小人计算机)',
+    modern: '现代CPU (x86/ARM)',
+    clockSpeed: '时钟频率',
+    executionTime: '执行时间',
+    instructions: '指令数',
+    memoryAccess: '内存访问',
+    cache: '缓存',
+    pipeline: '流水线',
+    branchPrediction: '分支预测',
+    outOfOrder: '乱序执行',
+    speedup: '加速比',
+    whyFaster: '为什么更快？',
+    reasons: {
+      pipelining: '流水线：同时执行多条指令',
+      cache: '缓存：靠近CPU的快速内存',
+      branchPrediction: '分支预测：提前猜测跳转方向',
+      outOfOrder: '乱序执行：重排指令提高效率',
+      multiCore: '多核：并行处理'
+    }
   },
   export: {
     title: '导出数据',

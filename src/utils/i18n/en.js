@@ -8,6 +8,7 @@ export const en = {
     editor: 'Editor',
     benchmark: 'Benchmark',
     analysis: 'Analysis',
+    comparison: 'Comparison',
     export: 'Export'
   },
   editor: {
@@ -42,6 +43,29 @@ export const en = {
     inputSize: 'Input Size',
     count: 'Count',
     algorithm: 'Algorithm'
+  },
+  comparison: {
+    title: 'LMC vs Modern CPU Architecture',
+    runComparison: 'Run Comparison',
+    lmc: 'LMC (Little Man Computer)',
+    modern: 'Modern CPU (x86/ARM)',
+    clockSpeed: 'Clock Speed',
+    executionTime: 'Execution Time',
+    instructions: 'Instructions',
+    memoryAccess: 'Memory Access',
+    cache: 'Cache',
+    pipeline: 'Pipeline',
+    branchPrediction: 'Branch Prediction',
+    outOfOrder: 'Out-of-Order',
+    speedup: 'Speedup',
+    whyFaster: 'Why faster?',
+    reasons: {
+      pipelining: 'Pipelining: Execute multiple instructions simultaneously',
+      cache: 'Cache: Fast memory close to CPU',
+      branchPrediction: 'Branch Prediction: Guess jump direction before knowing',
+      outOfOrder: 'Out-of-Order: Reorder instructions for efficiency',
+      multiCore: 'Multi-core: Parallel processing'
+    }
   },
   export: {
     title: 'Export Data',
