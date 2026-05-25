@@ -66,8 +66,10 @@ export class LMC {
 
       if (opcode === 'DAT') {
         this.memory[index] = parseInt(operand) || 0;
-      } else if (opcode === 'INP' || opcode === 'OUT') {
-        this.memory[index] = 900;
+      } else if (opcode === 'INP') {
+        this.memory[index] = 901;
+      } else if (opcode === 'OUT') {
+        this.memory[index] = 902;
       } else if (opcode === 'HLT') {
         this.memory[index] = 0;
       } else {
@@ -83,13 +85,13 @@ export class LMC {
   }
 
   isOpcode(token) {
-    return ['HLT', 'ADD', 'SUB', 'STA', 'LDA', 'BRA', 'BRZ', 'BRP', 'INP', 'OUT', 'DAT'].includes(token);
+    return ['HLT', 'ADD', 'SUB', 'STA', 'LDA', 'BRA', 'BRZ', 'BRP', 'INP', 'OUT', 'DAT', 'MUL'].includes(token);
   }
 
   getOpcodeValue(opcode) {
     const map = {
       'HLT': 0, 'ADD': 1, 'SUB': 2, 'STA': 3,
-      'LDA': 5, 'BRA': 6, 'BRZ': 7, 'BRP': 8
+      'LDA': 5, 'BRA': 6, 'BRZ': 7, 'BRP': 8, 'MUL': 4
     };
     return map[opcode] || 0;
   }
@@ -141,6 +143,11 @@ export class LMC {
         this.memory[operand] = this.accumulator;
         this.metrics.memoryAccess++;
         break;
+      case 4:
+        this.accumulator *= this.memory[operand];
+        this.metrics.memoryAccess++;
+        if (this.accumulator > 999) this.accumulator = 999;
+        break;
       case 5:
         this.accumulator = this.memory[operand];
         this.metrics.memoryAccess++;
@@ -162,9 +169,9 @@ export class LMC {
         }
         break;
       case 9:
-        if (operand < 50) {
+        if (operand === 1) {
           this.accumulator = this.getInput();
-        } else {
+        } else if (operand === 2) {
           this.addOutput(this.accumulator);
         }
         break;
