@@ -5,36 +5,68 @@ export function getCPUInfo() {
   const userAgent = navigator.userAgent;
   let browser = 'Unknown';
   let os = 'Unknown';
+  let cpuArch = 'Unknown';
   
   if (userAgent.indexOf('Chrome') > -1) {
-    browser = 'Chrome';
+    const match = userAgent.match(/Chrome\/(\d+)/);
+    browser = 'Chrome ' + (match ? match[1] : '');
   } else if (userAgent.indexOf('Firefox') > -1) {
-    browser = 'Firefox';
+    const match = userAgent.match(/Firefox\/(\d+)/);
+    browser = 'Firefox ' + (match ? match[1] : '');
   } else if (userAgent.indexOf('Safari') > -1) {
     browser = 'Safari';
   } else if (userAgent.indexOf('Edge') > -1) {
-    browser = 'Edge';
+    const match = userAgent.match(/Edge\/(\d+)/);
+    browser = 'Edge ' + (match ? match[1] : '');
   }
   
   if (userAgent.indexOf('Windows') > -1) {
     os = 'Windows';
-  } else if (userAgent.indexOf('Mac') > -1) {
-    os = 'macOS';
+    const match = userAgent.match(/Windows NT (\d+\.\d+)/);
+    if (match) {
+      const version = match[1];
+      if (version === '10.0') os = 'Windows 10/11';
+      else if (version === '6.3') os = 'Windows 8.1';
+      else if (version === '6.2') os = 'Windows 8';
+      else if (version === '6.1') os = 'Windows 7';
+    }
+  } else if (userAgent.indexOf('Mac OS X') > -1) {
+    const match = userAgent.match(/Mac OS X (\d+[._]\d+)/);
+    os = 'macOS ' + (match ? match[1].replace('_', '.') : '');
   } else if (userAgent.indexOf('Linux') > -1) {
     os = 'Linux';
   } else if (userAgent.indexOf('Android') > -1) {
-    os = 'Android';
-  } else if (userAgent.indexOf('iOS') > -1) {
+    const match = userAgent.match(/Android (\d+)/);
+    os = 'Android ' + (match ? match[1] : '');
+  } else if (userAgent.indexOf('iPhone') > -1 || userAgent.indexOf('iPad') > -1) {
     os = 'iOS';
+  }
+  
+  if (userAgent.indexOf('x86_64') > -1 || userAgent.indexOf('Win64') > -1 || userAgent.indexOf('x64') > -1) {
+    cpuArch = 'x86_64';
+  } else if (userAgent.indexOf('x86') > -1 || userAgent.indexOf('Win32') > -1) {
+    cpuArch = 'x86';
+  } else if (userAgent.indexOf('arm64') > -1 || userAgent.indexOf('aarch64') > -1) {
+    cpuArch = 'ARM64';
+  } else if (userAgent.indexOf('arm') > -1) {
+    cpuArch = 'ARM';
+  }
+  
+  let cpuModel = cpuArch;
+  if (cpuCores >= 16) {
+    cpuModel += ' (' + cpuCores + ' cores)';
+  } else if (cpuCores >= 1) {
+    cpuModel += ' (' + cpuCores + ' cores)';
   }
   
   return {
     browser: browser,
     os: os,
-    cpu: navigator.platform || 'Unknown',
+    cpu: cpuModel,
     cores: cpuCores,
     memory: deviceMemory !== 'Unknown' ? deviceMemory + ' GB' : 'Unknown',
-    platform: navigator.platform || 'Unknown'
+    platform: navigator.platform || 'Unknown',
+    arch: cpuArch
   };
 }
 
@@ -127,8 +159,6 @@ export function benchmarkNativeCode(algorithm, inputSize) {
 }
 
 export function getLMCComparisonData(algorithm, inputSize) {
-  const lmcClockSpeed = 1;
-  
   let lmcInstructions = 0;
   let lmcMemoryAccess = 0;
   
@@ -162,6 +192,7 @@ export function getLMCComparisonData(algorithm, inputSize) {
       lmcMemoryAccess = inputSize * 15;
   }
   
+  const lmcClockSpeed = 1;
   const lmcExecutionTimeMs = (lmcInstructions / lmcClockSpeed) * 1000;
   
   return {

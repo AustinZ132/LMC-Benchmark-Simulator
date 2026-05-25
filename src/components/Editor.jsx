@@ -1,23 +1,30 @@
 import React, { useState, useRef, useCallback } from 'react';
 import { useI18n } from '../context/I18nContext';
-import { Play, RotateCcw, Copy, Check, ChevronDown } from 'lucide-react';
+import { Play, RotateCcw, Copy, Check, ChevronDown, BookOpen } from 'lucide-react';
 import { LMC } from '../utils/lmc';
 
 const PRESETS = {
   addition: {
     name: 'Addition (A+B)',
+    description: 'Input two numbers and add them',
     code: `; Addition: Input two numbers and add them
+; Input: 5, 3 → Output: 8
+
 INP
 STA A
 INP
 ADD A
 OUT
 HLT
+
 A DAT 0`
   },
   loop: {
     name: 'Loop Sum (1 to N)',
+    description: 'Calculate sum from 1 to N',
     code: `; Loop: Calculate sum from 1 to N
+; Input: 10 → Output: 55
+
 INP
 STA N
 LOOP LDA SUM
@@ -30,13 +37,17 @@ BRP LOOP
 LDA SUM
 OUT
 HLT
+
 SUM DAT 0
 N DAT 0
 ONE DAT 1`
   },
   multiply: {
     name: 'Multiply (A×B)',
-    code: `; Multiply: A times B using repeated addition
+    description: 'A times B using repeated addition',
+    code: `; Multiply: A times B
+; Input: 4, 5 → Output: 20
+
 INP
 STA A
 INP
@@ -51,6 +62,7 @@ BRP LOOP
 LDA RESULT
 OUT
 HLT
+
 A DAT 0
 B DAT 0
 RESULT DAT 0
@@ -58,7 +70,10 @@ ONE DAT 1`
   },
   factorial: {
     name: 'Factorial (N!)',
+    description: 'Calculate N factorial',
     code: `; Factorial: Calculate N!
+; Input: 5 → Output: 120
+
 INP
 STA N
 LDA ONE
@@ -73,13 +88,17 @@ BRP LOOP
 LDA RESULT
 OUT
 HLT
+
 N DAT 0
 RESULT DAT 0
 ONE DAT 1`
   },
   fibonacci: {
     name: 'Fibonacci',
-    code: `; Fibonacci: Calculate Nth number
+    description: 'Calculate Nth Fibonacci number',
+    code: `; Fibonacci: Nth number
+; Input: 10 → Output: 55
+
 INP
 STA N
 LDA ZERO
@@ -99,6 +118,7 @@ BRP LOOP
 LDA CURR
 OUT
 HLT
+
 N DAT 0
 PREV DAT 0
 CURR DAT 0
@@ -108,7 +128,10 @@ ONE DAT 1`
   },
   counter: {
     name: 'Counter (1 to N)',
-    code: `; Counter: Print numbers 1 to N
+    description: 'Print numbers 1 to N',
+    code: `; Counter: Print 1 to N
+; Input: 5 → Output: 1,2,3,4,5
+
 INP
 STA N
 LDA ONE
@@ -122,13 +145,34 @@ LDA N
 SUB COUNT
 BRP LOOP
 HLT
+
 N DAT 0
 COUNT DAT 0
 ONE DAT 1`
+  },
+  max: {
+    name: 'Find Maximum',
+    description: 'Find max of two numbers',
+    code: `; Find Maximum of two numbers
+; Input: 7, 9 → Output: 9
+
+INP
+STA A
+INP
+STA B
+SUB A
+BRP BMAX
+LDA A
+OUT
+HLT
+BMAX LDA B
+OUT
+HLT
+
+A DAT 0
+B DAT 0`
   }
 };
-
-const OPCODES = ['HLT', 'ADD', 'SUB', 'STA', 'LDA', 'BRA', 'BRZ', 'BRP', 'INP', 'OUT', 'DAT', 'MUL'];
 
 export default function Editor() {
   const { t } = useI18n();
@@ -147,7 +191,7 @@ export default function Editor() {
       const inputs = Array.from({ length: inputCount }, (_, i) => i + 1);
       lmc.setInput(inputs);
       const result = lmc.run();
-      setOutput(result.output.join('\n') || 'No output (program may need input)');
+      setOutput(result.output.join('\n') || 'No output');
     } catch (error) {
       setOutput(`Error: ${error.message}`);
     }
@@ -187,14 +231,18 @@ export default function Editor() {
   return (
     <section id="editor" className="section">
       <div className="section-header">
-        <h2 className="section-title">{t('editor.title')}</h2>
+        <h2 className="section-title">
+          <BookOpen size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          {t('editor.title')}
+        </h2>
         <div className="section-actions">
           <div className="preset-dropdown">
             <button 
               onClick={() => setShowPresets(!showPresets)} 
               className="button-secondary-sm"
             >
-              Presets <ChevronDown size={14} />
+              <ChevronDown size={14} />
+              <span>Presets</span>
             </button>
             {showPresets && (
               <div className="preset-menu">
@@ -204,7 +252,8 @@ export default function Editor() {
                     onClick={() => handlePresetSelect(key)}
                     className="preset-item"
                   >
-                    {preset.name}
+                    <span className="preset-name">{preset.name}</span>
+                    <span className="preset-desc">{preset.description}</span>
                   </button>
                 ))}
               </div>
@@ -228,7 +277,7 @@ export default function Editor() {
         <div className="editor-panel">
           <div className="editor-header">
             <span className="editor-filename">program.lmc</span>
-            <span className="editor-hint">Tab for indent</span>
+            <span className="editor-hint">Tab to indent</span>
           </div>
           <textarea
             ref={textareaRef}
@@ -248,7 +297,7 @@ export default function Editor() {
             <span className="output-title">Output</span>
           </div>
           <div className="output-content">
-            <pre>{output || '// Click "Run" to execute the program'}</pre>
+            <pre>{output || '// Click "Run" to execute'}</pre>
           </div>
         </div>
       </div>
