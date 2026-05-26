@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../context/I18nContext';
-import { Terminal, Zap, ArrowRight, Cpu, ChevronRight } from 'lucide-react';
+import { Terminal, Zap, ArrowRight, Cpu } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function Hero() {
@@ -10,100 +10,131 @@ export default function Hero() {
   const sectionRef = useRef(null);
   const titleRef = useRef(null);
   const subtitleRef = useRef(null);
-  const cardsRef = useRef([]);
   const badgeRef = useRef(null);
+  const tagsRef = useRef(null);
+  const card1Ref = useRef(null);
+  const card2Ref = useRef(null);
 
   useEffect(() => {
-    // Set initial state
-    gsap.set([titleRef.current, subtitleRef.current, badgeRef.current], {
-      opacity: 0,
-      y: 30
-    });
-    
-    gsap.set(cardsRef.current, {
-      opacity: 0,
-      y: 50
-    });
-
-    // Create timeline
-    const tl = gsap.timeline({ delay: 0.2 });
-
-    tl.to(badgeRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out'
-    })
-    .to(titleRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: 'power3.out'
-    }, '-=0.3')
-    .to(subtitleRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.7,
-      ease: 'power2.out'
-    }, '-=0.4')
-    .to(cardsRef.current, {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      stagger: 0.15,
-      ease: 'back.out(1.4)'
-    }, '-=0.3');
-
-    // Hover animations for cards
-    cardsRef.current.forEach(card => {
-      if (!card) return;
-      
-      card.addEventListener('mouseenter', () => {
-        gsap.to(card, {
-          y: -8,
-          scale: 1.02,
-          duration: 0.3,
-          ease: 'power2.out'
-        });
+    const ctx = gsap.context(() => {
+      // Initial state
+      gsap.set([badgeRef.current, titleRef.current, subtitleRef.current, card1Ref.current, card2Ref.current, tagsRef.current], {
+        opacity: 0,
+        y: 40
       });
 
-      card.addEventListener('mouseleave', () => {
-        gsap.to(card, {
-          y: 0,
-          scale: 1,
-          duration: 0.3,
-          ease: 'power2.out'
+      // Timeline
+      const tl = gsap.timeline({ delay: 0.3 });
+
+      tl.to(badgeRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      })
+      .to(titleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.7,
+        ease: 'power3.out'
+      }, '-=0.2')
+      .to(subtitleRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'power2.out'
+      }, '-=0.3')
+      .to(card1Ref.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'back.out(1.2)'
+      }, '-=0.2')
+      .to(card2Ref.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.6,
+        ease: 'back.out(1.2)'
+      }, '-=0.4')
+      .to(tagsRef.current, {
+        opacity: 1,
+        y: 0,
+        duration: 0.5,
+        ease: 'power2.out'
+      }, '-=0.3');
+
+      // Hover animations
+      const cards = [card1Ref.current, card2Ref.current];
+      cards.forEach(card => {
+        if (!card) return;
+
+        card.addEventListener('mouseenter', () => {
+          gsap.to(card, {
+            y: -12,
+            scale: 1.03,
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.15)',
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+          gsap.to(card.querySelector('.menu-icon'), {
+            scale: 1.15,
+            rotation: 5,
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+          gsap.to(card.querySelector('.menu-arrow'), {
+            x: 8,
+            opacity: 1,
+            duration: 0.3,
+            ease: 'power2.out'
+          });
+        });
+
+        card.addEventListener('mouseleave', () => {
+          gsap.to(card, {
+            y: 0,
+            scale: 1,
+            boxShadow: '0 1px 3px rgba(0, 0, 0, 0.08)',
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+          gsap.to(card.querySelector('.menu-icon'), {
+            scale: 1,
+            rotation: 0,
+            duration: 0.4,
+            ease: 'power2.out'
+          });
+          gsap.to(card.querySelector('.menu-arrow'), {
+            x: 0,
+            opacity: 0.5,
+            duration: 0.3,
+            ease: 'power2.out'
+          });
         });
       });
-    });
+    }, sectionRef);
 
-    return () => {
-      tl.kill();
-    };
+    return () => ctx.revert();
   }, []);
-
-  const addToRefs = (el) => {
-    if (el && !cardsRef.current.includes(el)) {
-      cardsRef.current.push(el);
-    }
-  };
 
   const menuItems = [
     {
-      icon: <Terminal size={24} />,
+      ref: card1Ref,
+      icon: <Terminal size={28} />,
       title: isZh ? 'LMC 模拟器' : 'LMC Simulator',
       description: isZh ? '编写和运行 LMC 汇编代码，支持多种预设算法' : 'Write and run LMC assembly code with algorithm presets',
       link: '/editor',
       color: '#0070f3',
-      bg: '#f0f7ff'
+      bg: '#e8f4ff'
     },
     {
-      icon: <Zap size={24} />,
+      ref: card2Ref,
+      icon: <Zap size={28} />,
       title: isZh ? '基准测试' : 'Benchmark',
       description: isZh ? '测试算法性能，对比 LMC 与现代 CPU 的架构差异' : 'Test performance, compare LMC vs modern CPU architecture',
       link: '/benchmark',
       color: '#7928ca',
-      bg: '#f5f0ff'
+      bg: '#f3e8ff'
     }
   ];
 
@@ -129,7 +160,7 @@ export default function Hero() {
           {menuItems.map((item, index) => (
             <Link 
               key={index} 
-              ref={addToRefs}
+              ref={item.ref}
               to={item.link} 
               className="menu-card"
             >
@@ -140,12 +171,14 @@ export default function Hero() {
                 <h3 className="menu-title">{item.title}</h3>
                 <p className="menu-desc">{item.description}</p>
               </div>
-              <ChevronRight size={20} className="menu-arrow" />
+              <div className="menu-arrow">
+                <ArrowRight size={20} />
+              </div>
             </Link>
           ))}
         </div>
 
-        <div className="hero-tags">
+        <div ref={tagsRef} className="hero-tags">
           <span className="tag-item">Fetch-Decode-Execute</span>
           <span className="tag-dot">·</span>
           <span className="tag-item">Von Neumann</span>

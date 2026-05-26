@@ -5,36 +5,43 @@ import gsap from 'gsap';
 export default function PageTransition({ children }) {
   const location = useLocation();
   const containerRef = useRef(null);
-  const prevLocation = useRef(location.pathname);
+  const isFirstRender = useRef(true);
 
   useEffect(() => {
-    if (prevLocation.current !== location.pathname) {
-      // Page changed, animate transition
-      const container = containerRef.current;
-      if (!container) return;
+    const container = containerRef.current;
+    if (!container) return;
 
-      // Exit animation
-      gsap.to(container, {
-        opacity: 0,
-        y: 20,
-        duration: 0.2,
-        ease: 'power2.in',
-        onComplete: () => {
-          // Enter animation
-          gsap.fromTo(container, 
-            { opacity: 0, y: -20 },
-            { 
-              opacity: 1, 
-              y: 0, 
-              duration: 0.4, 
-              ease: 'power3.out' 
-            }
-          );
-        }
-      });
-
-      prevLocation.current = location.pathname;
+    if (isFirstRender.current) {
+      // First render - fade in
+      gsap.fromTo(container,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
+      );
+      isFirstRender.current = false;
+      return;
     }
+
+    // Page transition animation
+    const tl = gsap.timeline();
+
+    // Exit animation
+    tl.to(container, {
+      opacity: 0,
+      y: -20,
+      scale: 0.98,
+      duration: 0.25,
+      ease: 'power2.in'
+    });
+
+    // Enter animation
+    tl.fromTo(container,
+      { opacity: 0, y: 30, scale: 0.98 },
+      { opacity: 1, y: 0, scale: 1, duration: 0.4, ease: 'power3.out' }
+    );
+
+    return () => {
+      tl.kill();
+    };
   }, [location.pathname]);
 
   return (
