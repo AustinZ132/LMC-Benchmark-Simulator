@@ -1393,3 +1393,38 @@ body {
 .page-transition {
   min-height: calc(100vh - 120px);
 }
+
+/* Turnstile */
+.turnstile-container {
+  display: flex;
+  justify-content: center;
+  margin: var(--space-4) 0;
+}
+
+.turnstile-widget {
+  display: inline-block;
+}
+
+.export-verify {
+  background-color: var(--color-canvas-soft);
+  border: 1px solid var(--color-hairline);
+  border-radius: var(--rounded-sm);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  text-align: center;
+}
+
+.verify-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--color-body);
+}
+
+.verify-header svg {
+  color: var(--color-link);
+}
