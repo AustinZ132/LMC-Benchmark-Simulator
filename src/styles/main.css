@@ -1388,3 +1388,8 @@ body {
     width: 100%;
   }
 }
+
+/* Page Transition */
+.page-transition {
+  min-height: calc(100vh - 120px);
+}
