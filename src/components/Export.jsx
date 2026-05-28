@@ -4,27 +4,6 @@ import { useBenchmark } from '../context/BenchmarkContext';
 import Turnstile from './Turnstile';
 import { Download, FileImage, FileSpreadsheet, FileText, ShieldCheck } from 'lucide-react';
 
-async function verifyTurnstileToken(token) {
-  if (!token) return false;
-  const allowUnverifiedFallback = import.meta.env.DEV ||
-    import.meta.env.VITE_TURNSTILE_ALLOW_UNVERIFIED === 'true';
-
-  try {
-    const response = await fetch('/api/turnstile', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, action: 'export' })
-    });
-    const result = await response.json();
-
-    if (result.success) return true;
-    if (result.configurationRequired && allowUnverifiedFallback) return true;
-    return false;
-  } catch (error) {
-    return allowUnverifiedFallback;
-  }
-}
-
 export default function Export() {
   const { t } = useI18n();
   const { results } = useBenchmark();
@@ -36,7 +15,6 @@ export default function Export() {
       return false;
     }
   });
-  const [isVerifying, setIsVerifying] = useState(false);
   const [verificationError, setVerificationError] = useState('');
 
   const getExportTarget = () => document.getElementById('benchmark-report');
@@ -135,22 +113,13 @@ export default function Export() {
     }
   }, []);
 
-  const handleVerify = useCallback(async (token) => {
+  const handleVerify = useCallback((token) => {
     if (!token) {
       setVerificationError(t('security.expired'));
       return;
     }
 
-    setIsVerifying(true);
     setVerificationError('');
-    const verified = await verifyTurnstileToken(token);
-    setIsVerifying(false);
-
-    if (!verified) {
-      setVerificationError(t('security.failed'));
-      return;
-    }
-
     try {
       window.sessionStorage.setItem('lmc-export-verified', 'true');
     } catch (error) {
@@ -161,7 +130,6 @@ export default function Export() {
   }, [t]);
 
   const handleVerifyError = useCallback(() => {
-    setIsVerifying(false);
     setVerificationError(t('security.failed'));
   }, [t]);
 
@@ -182,7 +150,6 @@ export default function Export() {
             </div>
             <p className="verify-desc">{t('security.description')}</p>
             <Turnstile onVerify={handleVerify} onError={handleVerifyError} action="export" />
-            {isVerifying && <p className="verify-status">{t('security.checking')}</p>}
             {verificationError && <p className="verify-error">{verificationError}</p>}
             <p className="verify-footer">{t('security.footer')}</p>
           </div>

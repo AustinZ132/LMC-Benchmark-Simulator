@@ -98,12 +98,11 @@ export const en = {
     report: 'Export PDF'
   },
   security: {
-    title: 'Verify before export',
-    description: 'Complete one Cloudflare Turnstile check to unlock the export buttons.',
-    checking: 'Verifying...',
-    failed: 'Verification did not pass. Refresh the challenge and try again.',
-    expired: 'The verification expired. Complete the challenge again.',
-    footer: 'Protected by Cloudflare Turnstile'
+    title: 'Verify to export',
+    description: 'Complete verification to show export buttons.',
+    failed: 'Verification failed. Try again.',
+    expired: 'Verification expired. Try again.',
+    footer: 'Cloudflare Turnstile'
   },
   algorithms: {
     simpleArithmetic: {
