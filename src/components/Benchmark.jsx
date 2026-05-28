@@ -1,10 +1,156 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
 import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData, formatDuration, formatMultiplier } from '../utils/cpu';
-import { Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge, GitBranch } from 'lucide-react';
+import { Check, ChevronDown, Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge, GitBranch } from 'lucide-react';
 import gsap from 'gsap';
+
+function BenchmarkDropdown({
+  id,
+  value,
+  items,
+  disabled,
+  onChange,
+  renderValue,
+  renderItem,
+  menuWidth = 320
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState(null);
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
+  const selectedItem = items.find((item) => item.value === value) || items[0];
+
+  const updateMenuPosition = useCallback(() => {
+    const button = buttonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const viewportPadding = 12;
+    const width = Math.max(rect.width, menuWidth);
+    const left = Math.min(
+      Math.max(rect.left, viewportPadding),
+      window.innerWidth - width - viewportPadding
+    );
+
+    setMenuStyle({
+      top: rect.bottom + 8,
+      left,
+      width
+    });
+  }, [menuWidth]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+
+    updateMenuPosition();
+
+    const handlePointerDown = (event) => {
+      if (
+        buttonRef.current?.contains(event.target) ||
+        menuRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setIsOpen(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setIsOpen(false);
+    };
+
+    window.addEventListener('resize', updateMenuPosition);
+    window.addEventListener('scroll', updateMenuPosition, true);
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('resize', updateMenuPosition);
+      window.removeEventListener('scroll', updateMenuPosition, true);
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isOpen, updateMenuPosition]);
+
+  useEffect(() => {
+    if (!isOpen || !menuRef.current) return undefined;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const tween = gsap.fromTo(menuRef.current, {
+      autoAlpha: 0,
+      y: 8,
+      scale: 0.98
+    }, {
+      autoAlpha: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.2,
+      ease: 'power3.out'
+    });
+
+    return () => tween.kill();
+  }, [isOpen]);
+
+  const handleToggle = useCallback(() => {
+    if (disabled) return;
+    if (!isOpen) updateMenuPosition();
+    setIsOpen((open) => !open);
+  }, [disabled, isOpen, updateMenuPosition]);
+
+  const handleSelect = useCallback((item) => {
+    onChange(item.value);
+    setIsOpen(false);
+  }, [onChange]);
+
+  return (
+    <div className="benchmark-select">
+      <button
+        id={id}
+        ref={buttonRef}
+        type="button"
+        className="benchmark-select-trigger"
+        aria-haspopup="menu"
+        aria-expanded={isOpen}
+        disabled={disabled}
+        onClick={handleToggle}
+      >
+        <span className="benchmark-select-value">
+          {renderValue(selectedItem)}
+        </span>
+        <ChevronDown size={16} className={`benchmark-select-chevron ${isOpen ? 'open' : ''}`} />
+      </button>
+      {isOpen && menuStyle && createPortal(
+        <div
+          ref={menuRef}
+          className="benchmark-select-menu"
+          style={menuStyle}
+          role="menu"
+        >
+          {items.map((item) => {
+            const active = item.value === value;
+            return (
+              <button
+                key={item.value}
+                type="button"
+                className={`benchmark-select-option ${active ? 'active' : ''}`}
+                onClick={() => handleSelect(item)}
+                role="menuitem"
+              >
+                <span className="benchmark-select-option-body">
+                  {renderItem(item)}
+                </span>
+                {active && <Check size={15} />}
+              </button>
+            );
+          })}
+        </div>,
+        document.body
+      )}
+    </div>
+  );
+}
 
 export default function Benchmark() {
   const { t } = useI18n();
@@ -20,6 +166,17 @@ export default function Benchmark() {
 
   const algorithmList = Object.values(ALGORITHMS);
   const selectedAlgorithm = ALGORITHMS[algorithm];
+  const algorithmItems = algorithmList.map((algo) => ({
+    value: algo.id,
+    label: t(algo.nameKey),
+    description: t(algo.descKey),
+    meta: algo.complexity
+  }));
+  const inputSizeItems = selectedAlgorithm.inputSizes.map((size) => ({
+    value: size,
+    label: String(size),
+    meta: `n = ${size}`
+  }));
 
   useEffect(() => {
     setCpuInfo(getCPUInfo());
@@ -158,33 +315,49 @@ export default function Benchmark() {
         <div className="benchmark-controls" data-benchmark-motion>
           <div className="control-group">
             <label className="control-label" htmlFor="benchmark-algorithm">{t('benchmark.selectAlgorithm')}</label>
-            <select
+            <BenchmarkDropdown
               id="benchmark-algorithm"
               value={algorithm}
-              onChange={(e) => setAlgorithm(e.target.value)}
-              className="form-input"
+              onChange={setAlgorithm}
+              items={algorithmItems}
               disabled={isRunning}
-            >
-              {algorithmList.map((algo) => (
-                <option key={algo.id} value={algo.id}>
-                  {t(algo.nameKey)} - {algo.complexity}
-                </option>
-              ))}
-            </select>
+              menuWidth={380}
+              renderValue={(item) => (
+                <>
+                  <span className="benchmark-select-primary">{item.label}</span>
+                  <span className="benchmark-select-meta">{item.meta}</span>
+                </>
+              )}
+              renderItem={(item) => (
+                <>
+                  <span className="benchmark-select-option-title">{item.label}</span>
+                  <span className="benchmark-select-option-desc">{item.description}</span>
+                  <span className="benchmark-select-option-meta">{item.meta}</span>
+                </>
+              )}
+            />
           </div>
           <div className="control-group">
             <label className="control-label" htmlFor="benchmark-input-size">{t('benchmark.inputSize')}</label>
-            <select
+            <BenchmarkDropdown
               id="benchmark-input-size"
               value={inputSize}
-              onChange={(e) => setInputSize(Number(e.target.value))}
-              className="form-input"
+              onChange={setInputSize}
+              items={inputSizeItems}
               disabled={isRunning}
-            >
-              {selectedAlgorithm.inputSizes.map((size) => (
-                <option key={size} value={size}>{size}</option>
-              ))}
-            </select>
+              menuWidth={180}
+              renderValue={(item) => (
+                <>
+                  <span className="benchmark-select-primary">n = {item.label}</span>
+                </>
+              )}
+              renderItem={(item) => (
+                <>
+                  <span className="benchmark-select-option-title">{item.label}</span>
+                  <span className="benchmark-select-option-meta">{item.meta}</span>
+                </>
+              )}
+            />
           </div>
           {selectedAlgorithm && (
             <div className="algorithm-info">
