@@ -191,8 +191,11 @@ export function benchmarkNativeCode(algorithm, inputSize) {
   };
 }
 
+const LMC_REFERENCE_CLOCK_HZ = 2_300_000_000;
+
 export function formatDuration(ms) {
   if (!Number.isFinite(ms) || ms <= 0) return '0 ms';
+  if (ms < 0.001) return `${(ms * 1_000_000).toFixed(2)} ns`;
   if (ms < 1) return `${(ms * 1000).toFixed(ms < 0.01 ? 3 : 2)} us`;
   if (ms < 1000) return `${ms.toFixed(3)} ms`;
   if (ms < 60000) return `${(ms / 1000).toFixed(2)} s`;
@@ -209,13 +212,15 @@ export function formatMultiplier(value) {
 }
 
 export function makeLMCComparisonData(result) {
+  const cycles = result?.cycles || 0;
+
   return {
     instructions: result?.instructionCount || 0,
     memoryAccess: result?.memoryAccess || 0,
-    cycles: result?.cycles || 0,
-    executionTime: (result?.cycles || 0) * 1000,
+    cycles,
+    executionTime: (cycles / LMC_REFERENCE_CLOCK_HZ) * 1000,
     output: result?.output || [],
-    clockSpeed: '1 Hz',
+    clockSpeed: '2.3 GHz reference',
     hasCache: false,
     hasPipeline: false,
     hasBranchPrediction: false

@@ -69,7 +69,7 @@ export const zh = {
   comparison: {
     title: 'LMC 与现代 CPU 对比',
     runComparison: '运行对比',
-    lmc: 'LMC',
+    lmc: 'LMC（2.3GHz 参考）',
     modern: '现代 CPU',
     clockSpeed: '时钟频率',
     executionTime: '估算执行时间',
@@ -82,8 +82,8 @@ export const zh = {
     outOfOrder: '乱序执行',
     speedup: '加速比',
     whyFaster: '现代 CPU 为什么更快',
-    yourCpuIs: '当前 CPU 约快',
-    fasterThanLmc: '倍于 1Hz LMC 模型',
+    yourCpuIs: 'CPU / LMC 比值',
+    fasterThanLmc: '（LMC 参考频率 2.3GHz）',
     reasons: {
       pipelining: '流水线让多条指令的不同阶段重叠执行。',
       cache: '缓存把常用数据放到离 CPU 更近的位置。',

@@ -69,7 +69,7 @@ export const en = {
   comparison: {
     title: 'LMC vs Modern CPU',
     runComparison: 'Run Comparison',
-    lmc: 'LMC',
+    lmc: 'LMC (2.3GHz reference)',
     modern: 'Modern CPU',
     clockSpeed: 'Clock Speed',
     executionTime: 'Estimated Time',
@@ -82,8 +82,8 @@ export const en = {
     outOfOrder: 'Out-of-Order',
     speedup: 'Speedup',
     whyFaster: 'Why modern CPUs are faster',
-    yourCpuIs: 'Your CPU is about',
-    fasterThanLmc: 'times faster than the 1Hz LMC model',
+    yourCpuIs: 'CPU / LMC ratio',
+    fasterThanLmc: '(LMC reference clock: 2.3GHz)',
     reasons: {
       pipelining: 'Pipelining overlaps different stages of multiple instructions.',
       cache: 'Cache keeps frequently used data close to the CPU.',

@@ -237,9 +237,14 @@ export default function Benchmark() {
             <div className="comparison-card lmc-card" data-compare-motion>
               <div className="card-header">
                 <HardDrive size={18} />
-                <span>LMC</span>
+                <span>{t('comparison.lmc')}</span>
               </div>
               <div className="card-body">
+                <div className="metric-row">
+                  <Cpu size={14} />
+                  <span className="metric-label">{t('comparison.clockSpeed')}</span>
+                  <span className="metric-value">{comparison.lmc.clockSpeed}</span>
+                </div>
                 <div className="metric-row">
                   <Clock size={14} />
                   <span className="metric-label">{t('comparison.executionTime')}</span>
