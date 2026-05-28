@@ -8,13 +8,7 @@ export default function Export() {
   const { t } = useI18n();
   const { results } = useBenchmark();
   const [isExporting, setIsExporting] = useState(false);
-  const [isVerified, setIsVerified] = useState(() => {
-    try {
-      return window.sessionStorage.getItem('lmc-export-verified') === 'true';
-    } catch (error) {
-      return false;
-    }
-  });
+  const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState('');
 
   const getExportTarget = () => document.getElementById('benchmark-report');
@@ -120,12 +114,6 @@ export default function Export() {
     }
 
     setVerificationError('');
-    try {
-      window.sessionStorage.setItem('lmc-export-verified', 'true');
-    } catch (error) {
-      // Session storage is optional; verification still works for this page view.
-    }
-
     setIsVerified(true);
   }, [t]);
 
