@@ -251,11 +251,6 @@ export default function Benchmark() {
               </div>
               <div className="card-body">
                 <div className="metric-row">
-                  <Cpu size={14} />
-                  <span className="metric-label">{t('comparison.clockSpeed')}</span>
-                  <span className="metric-value">{comparison.lmc.clockSpeed}</span>
-                </div>
-                <div className="metric-row">
                   <Clock size={14} />
                   <span className="metric-label">{t('comparison.executionTime')}</span>
                   <span className="metric-value">{formatDuration(comparison.lmc.executionTime)}</span>
