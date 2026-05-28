@@ -77,6 +77,7 @@ export const en = {
     memoryAccess: 'Memory Access',
     cache: 'Cache',
     pipeline: 'Pipeline',
+    samples: 'Samples',
     branchPrediction: 'Branch Prediction',
     outOfOrder: 'Out-of-Order',
     speedup: 'Speedup',

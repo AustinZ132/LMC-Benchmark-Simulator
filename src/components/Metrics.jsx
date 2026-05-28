@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { Activity, HardDrive, GitBranch, Clock } from 'lucide-react';
+import gsap from 'gsap';
 
 export default function Metrics() {
   const { t } = useI18n();
   const { metrics } = useBenchmark();
+  const sectionRef = useRef(null);
 
   const metricsList = [
     {
@@ -34,8 +36,32 @@ export default function Metrics() {
     }
   ];
 
+  useEffect(() => {
+    if (!sectionRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.set('.metric-item', { autoAlpha: 1, clearProps: 'transform' });
+        return;
+      }
+
+      gsap.fromTo('.metric-item', {
+        autoAlpha: 0,
+        y: 14
+      }, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.45,
+        stagger: 0.05,
+        ease: 'power3.out'
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [metrics.instructions, metrics.memory, metrics.branches, metrics.cycles]);
+
   return (
-    <section id="metrics" className="section">
+    <section id="metrics" className="section" ref={sectionRef}>
       <div className="section-header">
         <h2 className="section-title">{t('metrics.title')}</h2>
       </div>

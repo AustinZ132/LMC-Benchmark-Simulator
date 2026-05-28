@@ -1,8 +1,9 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { Check, ChevronDown, Copy, Play, RotateCcw, Terminal } from 'lucide-react';
 import { LMC } from '../utils/lmc';
 import { ALGORITHMS, getBenchmarkInput } from '../utils/algorithms';
+import gsap from 'gsap';
 
 const PRESET_IDS = ['simpleArithmetic', 'loopSummation', 'multiplication', 'fibonacci', 'smcTraversal'];
 
@@ -16,9 +17,55 @@ export default function Editor() {
   const [metrics, setMetrics] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const sectionRef = useRef(null);
   const textareaRef = useRef(null);
 
   const presets = useMemo(() => PRESET_IDS.map((id) => ALGORITHMS[id]), []);
+
+  useEffect(() => {
+    if (!sectionRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.set('[data-editor-motion]', { autoAlpha: 1, clearProps: 'transform' });
+        return;
+      }
+
+      gsap.fromTo('[data-editor-motion]', {
+        autoAlpha: 0,
+        y: 18
+      }, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.55,
+        stagger: 0.07,
+        ease: 'power3.out'
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!showPresets || !sectionRef.current) return undefined;
+
+    const menu = sectionRef.current.querySelector('.preset-menu');
+    if (!menu || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+
+    const tween = gsap.fromTo(menu, {
+      autoAlpha: 0,
+      y: 8,
+      scale: 0.98
+    }, {
+      autoAlpha: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.22,
+      ease: 'power3.out'
+    });
+
+    return () => tween.kill();
+  }, [showPresets]);
 
   const handleRun = useCallback(() => {
     const lmc = new LMC();
@@ -83,8 +130,8 @@ export default function Editor() {
   }, [code]);
 
   return (
-    <section id="editor" className="section">
-      <div className="section-header">
+    <section id="editor" className="section" ref={sectionRef}>
+      <div className="section-header" data-editor-motion>
         <h2 className="section-title">
           <Terminal size={20} />
           {t('editor.title')}
@@ -128,7 +175,7 @@ export default function Editor() {
           </button>
         </div>
       </div>
-      <div className="editor-container">
+      <div className="editor-container" data-editor-motion>
         <div className="editor-panel">
           <div className="editor-header">
             <span className="editor-filename">program.lmc</span>

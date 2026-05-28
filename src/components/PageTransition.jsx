@@ -11,8 +11,13 @@ export default function PageTransition({ children }) {
     const container = containerRef.current;
     if (!container) return;
 
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      gsap.set(container, { opacity: 1, y: 0, scale: 1, clearProps: 'transform' });
+      isFirstRender.current = false;
+      return;
+    }
+
     if (isFirstRender.current) {
-      // First render - fade in
       gsap.fromTo(container,
         { opacity: 0, y: 30 },
         { opacity: 1, y: 0, duration: 0.5, ease: 'power2.out' }
@@ -21,10 +26,8 @@ export default function PageTransition({ children }) {
       return;
     }
 
-    // Page transition animation
     const tl = gsap.timeline();
 
-    // Exit animation
     tl.to(container, {
       opacity: 0,
       y: -20,

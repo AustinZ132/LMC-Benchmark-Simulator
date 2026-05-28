@@ -77,6 +77,7 @@ export const zh = {
     memoryAccess: '内存访问',
     cache: '缓存',
     pipeline: '流水线',
+    samples: '采样次数',
     branchPrediction: '分支预测',
     outOfOrder: '乱序执行',
     speedup: '加速比',

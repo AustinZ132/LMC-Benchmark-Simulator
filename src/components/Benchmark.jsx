@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
-import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData } from '../utils/cpu';
-import { Play, Loader, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge } from 'lucide-react';
+import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData, formatDuration, formatMultiplier } from '../utils/cpu';
+import { Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge } from 'lucide-react';
+import gsap from 'gsap';
 
 export default function Benchmark() {
   const { t } = useI18n();
@@ -13,6 +14,9 @@ export default function Benchmark() {
   const [cpuInfo, setCpuInfo] = useState(null);
   const [comparison, setComparison] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
+  const sectionRef = useRef(null);
+  const progressFillRef = useRef(null);
+  const comparisonRef = useRef(null);
 
   const algorithmList = Object.values(ALGORITHMS);
   const selectedAlgorithm = ALGORITHMS[algorithm];
@@ -20,6 +24,74 @@ export default function Benchmark() {
   useEffect(() => {
     setCpuInfo(getCPUInfo());
   }, []);
+
+  useEffect(() => {
+    if (!sectionRef.current) return undefined;
+
+    const mm = gsap.matchMedia();
+    mm.add('(prefers-reduced-motion: no-preference)', () => {
+      const ctx = gsap.context(() => {
+        gsap.fromTo('[data-benchmark-motion]', {
+          autoAlpha: 0,
+          y: 18
+        }, {
+          autoAlpha: 1,
+          y: 0,
+          duration: 0.55,
+          stagger: 0.06,
+          ease: 'power3.out'
+        });
+      }, sectionRef);
+
+      return () => ctx.revert();
+    });
+
+    return () => mm.revert();
+  }, []);
+
+  useEffect(() => {
+    if (!progressFillRef.current) return;
+
+    gsap.to(progressFillRef.current, {
+      scaleX: progress / 100,
+      duration: 0.45,
+      ease: 'power3.out',
+      overwrite: 'auto'
+    });
+  }, [progress]);
+
+  useEffect(() => {
+    if (!showComparison || !comparisonRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.set('[data-compare-motion]', { autoAlpha: 1, clearProps: 'transform' });
+        return;
+      }
+
+      gsap.timeline({ defaults: { duration: 0.5, ease: 'power3.out' } })
+        .fromTo('[data-compare-motion]', {
+          autoAlpha: 0,
+          y: 20
+        }, {
+          autoAlpha: 1,
+          y: 0,
+          stagger: 0.07
+        })
+        .fromTo('.speedup-value', {
+          autoAlpha: 0,
+          y: 10,
+          scale: 0.98
+        }, {
+          autoAlpha: 1,
+          y: 0,
+          scale: 1,
+          duration: 0.35
+        }, '<0.18');
+    }, comparisonRef);
+
+    return () => ctx.revert();
+  }, [showComparison, comparison]);
 
   useEffect(() => {
     setInputSize(selectedAlgorithm.inputSizes.at(-1));
@@ -51,8 +123,8 @@ export default function Benchmark() {
   };
 
   return (
-    <section id="benchmark" className="section">
-      <div className="section-header">
+    <section id="benchmark" className="section benchmark-section" ref={sectionRef}>
+      <div className="section-header" data-benchmark-motion>
         <h2 className="section-title">
           <Activity size={20} />
           {t('benchmark.title')}
@@ -73,7 +145,7 @@ export default function Benchmark() {
       </div>
 
       <div className="benchmark-layout">
-        <div className="benchmark-controls">
+        <div className="benchmark-controls" data-benchmark-motion>
           <div className="control-group">
             <label className="control-label" htmlFor="benchmark-algorithm">{t('benchmark.selectAlgorithm')}</label>
             <select
@@ -114,7 +186,7 @@ export default function Benchmark() {
         </div>
 
         {cpuInfo && (
-          <div className="cpu-info-card">
+          <div className="cpu-info-card" data-benchmark-motion>
             <div className="cpu-info-header">
               <Cpu size={16} />
               <span>{t('benchmark.system')}</span>
@@ -141,9 +213,9 @@ export default function Benchmark() {
         )}
       </div>
 
-      <div className="progress-container">
-        <div className="progress-bar">
-          <div className="progress-fill" style={{ width: `${progress}%` }}></div>
+      <div className="progress-container" data-benchmark-motion>
+        <div className="progress-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow={Math.round(progress)}>
+          <div className="progress-fill" ref={progressFillRef}></div>
         </div>
         <div className="progress-info">
           <span className="progress-text">{Math.round(progress)}%</span>
@@ -155,14 +227,14 @@ export default function Benchmark() {
       </div>
 
       {showComparison && comparison && (
-        <div className="comparison-section">
-          <h3 className="comparison-title">
+        <div className="comparison-section" ref={comparisonRef}>
+          <h3 className="comparison-title" data-compare-motion>
             <Gauge size={18} />
             {t('comparison.title') || 'Performance Comparison'}
           </h3>
           
           <div className="comparison-grid">
-            <div className="comparison-card lmc-card">
+            <div className="comparison-card lmc-card" data-compare-motion>
               <div className="card-header">
                 <HardDrive size={18} />
                 <span>LMC</span>
@@ -171,7 +243,7 @@ export default function Benchmark() {
                 <div className="metric-row">
                   <Clock size={14} />
                   <span className="metric-label">{t('comparison.executionTime')}</span>
-                  <span className="metric-value">{comparison.lmc.executionTime.toFixed(2)} ms</span>
+                  <span className="metric-value">{formatDuration(comparison.lmc.executionTime)}</span>
                 </div>
                 <div className="metric-row">
                   <Activity size={14} />
@@ -190,7 +262,7 @@ export default function Benchmark() {
               </div>
             </div>
 
-            <div className="comparison-card native-card">
+            <div className="comparison-card native-card" data-compare-motion>
               <div className="card-header">
                 <Zap size={18} />
                 <span>{t('comparison.modern')} ({cpuInfo?.cpu})</span>
@@ -199,7 +271,7 @@ export default function Benchmark() {
                 <div className="metric-row">
                   <Clock size={14} />
                   <span className="metric-label">{t('comparison.executionTime')}</span>
-                  <span className="metric-value highlight">{comparison.native.executionTime.toFixed(4)} ms</span>
+                  <span className="metric-value highlight">{formatDuration(comparison.native.executionTime)}</span>
                 </div>
                 <div className="metric-row">
                   <Activity size={14} />
@@ -215,20 +287,21 @@ export default function Benchmark() {
                   <span className="tag enabled">L1/L2/L3 Cache</span>
                   <span className="tag enabled">Pipeline</span>
                   <span className="tag enabled">Branch Prediction</span>
+                  <span className="tag enabled">{t('comparison.samples')}: {comparison.native.iterations.toLocaleString()}</span>
                 </div>
               </div>
             </div>
           </div>
 
-          <div className="speedup-bar">
+          <div className="speedup-bar" data-compare-motion>
             <div className="speedup-content">
               <span className="speedup-label">{t('comparison.yourCpuIs')}</span>
-              <span className="speedup-value">{comparison.speedup.toFixed(0)}x</span>
+              <span className="speedup-value">{formatMultiplier(comparison.speedup)}</span>
               <span className="speedup-label">{t('comparison.fasterThanLmc')}</span>
             </div>
           </div>
 
-          <div className="why-faster">
+          <div className="why-faster" data-compare-motion>
             <h4>{t('comparison.whyFaster') || 'Why is modern CPU faster?'}</h4>
             <ul>
               <li><strong>Pipelining:</strong> {t('comparison.reasons.pipelining')}</li>

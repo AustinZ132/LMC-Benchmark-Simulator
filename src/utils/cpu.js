@@ -57,117 +57,155 @@ export function getCPUInfo() {
   };
 }
 
+function runNativeWorkload(algorithm, inputSize) {
+  let instructions = 0;
+  let memoryOps = 0;
+  let result = 0;
+
+  switch (algorithm) {
+    case 'simpleArithmetic': {
+      const a = 5;
+      const b = 3;
+      result = a + b;
+      instructions = 3;
+      memoryOps = 3;
+      break;
+    }
+    case 'loopSummation': {
+      for (let i = 1; i <= inputSize; i++) {
+        result += i;
+        instructions += 2;
+        memoryOps += 2;
+      }
+      break;
+    }
+    case 'multiplication': {
+      const a = 4;
+      for (let i = 0; i < inputSize; i++) {
+        result += a;
+        instructions += 2;
+        memoryOps += 2;
+      }
+      break;
+    }
+    case 'factorial': {
+      result = 1;
+      for (let i = 1; i <= inputSize; i++) {
+        result *= i;
+        instructions += 2;
+        memoryOps += 2;
+      }
+      break;
+    }
+    case 'fibonacci': {
+      let prev = 0;
+      let curr = 1;
+      if (inputSize === 0) {
+        result = 0;
+      } else {
+        for (let i = 1; i < inputSize; i++) {
+          const next = prev + curr;
+          prev = curr;
+          curr = next;
+          instructions += 3;
+          memoryOps += 3;
+        }
+        result = curr;
+      }
+      break;
+    }
+    case 'bubbleSort': {
+      for (let outer = inputSize - 1; outer > 0; outer--) {
+        for (let inner = outer; inner > 0; inner--) {
+          result++;
+          instructions += 3;
+          memoryOps += 2;
+        }
+      }
+      break;
+    }
+    case 'smcTraversal':
+    case 'linearSearch': {
+      for (let i = 0; i < inputSize; i++) {
+        result++;
+        instructions += 2;
+        memoryOps += 2;
+      }
+      break;
+    }
+    case 'power': {
+      result = 1;
+      for (let i = 0; i < inputSize; i++) {
+        result *= 2;
+        instructions += 2;
+        memoryOps += 2;
+      }
+      break;
+    }
+    default:
+      instructions = 1;
+      memoryOps = 1;
+  }
+
+  return { result, instructions, memoryOps };
+}
+
 export function benchmarkNativeCode(algorithm, inputSize) {
-  const iterations = 100;
-  let totalTime = 0;
+  const minMeasureMs = 32;
+  const maxIterations = 1_000_000;
+  let iterations = 0;
   let totalInstructions = 0;
   let totalMemoryOps = 0;
   let checksum = 0;
 
-  for (let iter = 0; iter < iterations; iter++) {
-    const startTime = performance.now();
-    let instructions = 0;
-    let memoryOps = 0;
-    let result = 0;
-
-    switch (algorithm) {
-      case 'simpleArithmetic': {
-        const a = 5;
-        const b = 3;
-        result = a + b;
-        instructions = 3;
-        memoryOps = 3;
-        break;
-      }
-      case 'loopSummation': {
-        for (let i = 1; i <= inputSize; i++) {
-          result += i;
-          instructions += 2;
-          memoryOps += 2;
-        }
-        break;
-      }
-      case 'multiplication': {
-        const a = 4;
-        for (let i = 0; i < inputSize; i++) {
-          result += a;
-          instructions += 2;
-          memoryOps += 2;
-        }
-        break;
-      }
-      case 'factorial': {
-        result = 1;
-        for (let i = 1; i <= inputSize; i++) {
-          result *= i;
-          instructions += 2;
-          memoryOps += 2;
-        }
-        break;
-      }
-      case 'fibonacci': {
-        let prev = 0;
-        let curr = 1;
-        if (inputSize === 0) {
-          result = 0;
-        } else {
-          for (let i = 1; i < inputSize; i++) {
-            const next = prev + curr;
-            prev = curr;
-            curr = next;
-            instructions += 3;
-            memoryOps += 3;
-          }
-          result = curr;
-        }
-        break;
-      }
-      case 'bubbleSort': {
-        for (let outer = inputSize - 1; outer > 0; outer--) {
-          for (let inner = outer; inner > 0; inner--) {
-            result++;
-            instructions += 3;
-            memoryOps += 2;
-          }
-        }
-        break;
-      }
-      case 'smcTraversal':
-      case 'linearSearch': {
-        for (let i = 0; i < inputSize; i++) {
-          result++;
-          instructions += 2;
-          memoryOps += 2;
-        }
-        break;
-      }
-      case 'power': {
-        result = 1;
-        for (let i = 0; i < inputSize; i++) {
-          result *= 2;
-          instructions += 2;
-          memoryOps += 2;
-        }
-        break;
-      }
-      default:
-        instructions = 1;
-        memoryOps = 1;
-    }
-
-    checksum += result;
-    totalTime += performance.now() - startTime;
-    totalInstructions += instructions;
-    totalMemoryOps += memoryOps;
+  for (let i = 0; i < 128; i++) {
+    checksum += runNativeWorkload(algorithm, inputSize).result;
   }
 
+  const startTime = performance.now();
+  let elapsedTime = 0;
+
+  while (elapsedTime < minMeasureMs && iterations < maxIterations) {
+    const batchSize = iterations < 10_000 ? 100 : 1000;
+
+    for (let i = 0; i < batchSize && iterations < maxIterations; i++) {
+      const run = runNativeWorkload(algorithm, inputSize);
+      checksum += run.result;
+      totalInstructions += run.instructions;
+      totalMemoryOps += run.memoryOps;
+      iterations++;
+    }
+
+    elapsedTime = performance.now() - startTime;
+  }
+
+  const averageTime = Math.max(elapsedTime / Math.max(iterations, 1), 0.000001);
+
   return {
-    executionTime: totalTime / iterations,
-    instructions: totalInstructions / iterations,
-    memoryAccess: totalMemoryOps / iterations,
+    executionTime: averageTime,
+    measuredTime: elapsedTime,
+    instructions: Math.round(totalInstructions / Math.max(iterations, 1)),
+    memoryAccess: Math.round(totalMemoryOps / Math.max(iterations, 1)),
     iterations,
     checksum
   };
+}
+
+export function formatDuration(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) return '0 ms';
+  if (ms < 1) return `${(ms * 1000).toFixed(ms < 0.01 ? 3 : 2)} us`;
+  if (ms < 1000) return `${ms.toFixed(3)} ms`;
+  if (ms < 60000) return `${(ms / 1000).toFixed(2)} s`;
+  return `${(ms / 60000).toFixed(2)} min`;
+}
+
+export function formatMultiplier(value) {
+  if (!Number.isFinite(value) || value <= 0) return '0x';
+  if (value >= 1_000_000_000) return `${(value / 1_000_000_000).toFixed(2)}Bx`;
+  if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(2)}Mx`;
+  if (value >= 1_000) return `${(value / 1_000).toFixed(2)}Kx`;
+  if (value >= 10) return `${value.toFixed(0)}x`;
+  return `${value.toFixed(2)}x`;
 }
 
 export function makeLMCComparisonData(result) {

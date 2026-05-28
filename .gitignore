@@ -66,3 +66,7 @@ yarn.lock
 
 # OpenCode
 .opencode/
+
+# Local agent skills
+.agents/
+skills-lock.json

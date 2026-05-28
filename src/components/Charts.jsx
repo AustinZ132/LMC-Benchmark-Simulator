@@ -4,6 +4,7 @@ import { useBenchmark } from '../context/BenchmarkContext';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
 import { BarChart3, RotateCcw } from 'lucide-react';
+import gsap from 'gsap';
 
 Chart.register(...registerables, zoomPlugin);
 
@@ -20,12 +21,37 @@ export default function Charts() {
   const complexityChartRef = useRef(null);
   const memoryChartRef = useRef(null);
   const comparisonChartRef = useRef(null);
+  const sectionRef = useRef(null);
   const complexityInstance = useRef(null);
   const memoryInstance = useRef(null);
   const comparisonInstance = useRef(null);
   const [selectedAlgorithms, setSelectedAlgorithms] = useState([]);
 
   const algorithms = [...new Set(results.map((r) => r.algorithmId).filter(Boolean))];
+
+  useEffect(() => {
+    if (!sectionRef.current) return undefined;
+
+    const ctx = gsap.context(() => {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        gsap.set('[data-chart-motion]', { autoAlpha: 1, clearProps: 'transform' });
+        return;
+      }
+
+      gsap.fromTo('[data-chart-motion]', {
+        autoAlpha: 0,
+        y: 18
+      }, {
+        autoAlpha: 1,
+        y: 0,
+        duration: 0.5,
+        stagger: 0.07,
+        ease: 'power3.out'
+      });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [results.length, selectedAlgorithms.length]);
 
   useEffect(() => {
     if (results.length === 0) return undefined;
@@ -199,14 +225,14 @@ export default function Charts() {
 
   if (results.length === 0) {
     return (
-      <section id="analysis" className="section">
-        <div className="section-header">
+      <section id="analysis" className="section" ref={sectionRef}>
+        <div className="section-header" data-chart-motion>
           <h2 className="section-title">
             <BarChart3 size={20} />
             {t('charts.title')}
           </h2>
         </div>
-        <div className="empty-state">
+        <div className="empty-state" data-chart-motion>
           <BarChart3 size={48} />
           <p>{t('charts.empty')}</p>
         </div>
@@ -215,8 +241,8 @@ export default function Charts() {
   }
 
   return (
-    <section id="analysis" className="section">
-      <div className="section-header">
+    <section id="analysis" className="section" ref={sectionRef}>
+      <div className="section-header" data-chart-motion>
         <h2 className="section-title">
           <BarChart3 size={20} />
           {t('charts.title')}
@@ -236,7 +262,7 @@ export default function Charts() {
         )}
       </div>
       <div className="charts-grid">
-        <div className="chart-container">
+        <div className="chart-container" data-chart-motion>
           <div className="chart-header">
             <h3 className="chart-title">{t('charts.complexity')}</h3>
             <button onClick={() => resetZoom(complexityInstance)} className="button-secondary-sm" aria-label={t('charts.resetZoom')}>
@@ -248,7 +274,7 @@ export default function Charts() {
           </div>
           <p className="chart-hint">{t('charts.zoomHint')}</p>
         </div>
-        <div className="chart-container">
+        <div className="chart-container" data-chart-motion>
           <div className="chart-header">
             <h3 className="chart-title">{t('charts.memory')}</h3>
             <button onClick={() => resetZoom(memoryInstance)} className="button-secondary-sm" aria-label={t('charts.resetZoom')}>
@@ -261,7 +287,7 @@ export default function Charts() {
           <p className="chart-hint">{t('charts.zoomHint')}</p>
         </div>
       </div>
-      <div className="chart-container comparison-chart">
+      <div className="chart-container comparison-chart" data-chart-motion>
         <div className="chart-header">
           <h3 className="chart-title">{t('charts.comparison')}</h3>
         </div>
