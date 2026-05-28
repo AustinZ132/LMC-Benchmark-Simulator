@@ -15,6 +15,17 @@ const CHART_COLORS = [
   { border: '#f5a623', bg: 'rgba(245, 166, 35, 0.12)' }
 ];
 
+const CPU_CHART_COLORS = [
+  { border: '#00a63e', bg: 'rgba(0, 166, 62, 0.08)' },
+  { border: '#0f766e', bg: 'rgba(15, 118, 110, 0.08)' },
+  { border: '#d97706', bg: 'rgba(217, 119, 6, 0.1)' },
+  { border: '#dc2626', bg: 'rgba(220, 38, 38, 0.08)' }
+];
+
+function toChartValue(value) {
+  return Number.isFinite(value) ? value : 0;
+}
+
 export default function Charts() {
   const { t } = useI18n();
   const { results } = useBenchmark();
@@ -69,21 +80,40 @@ export default function Charts() {
       ? Object.keys(groupedByAlgorithm).filter((id) => selectedAlgorithms.includes(id))
       : Object.keys(groupedByAlgorithm);
 
-    const lineDatasets = (key) => filteredAlgorithms.map((algorithmId, index) => {
-      const color = CHART_COLORS[index % CHART_COLORS.length];
-      return {
-        label: algorithmId,
-        data: groupedByAlgorithm[algorithmId].map((point) => ({
-          x: point.inputSize,
-          y: point[key]
-        })),
-        borderColor: color.border,
-        backgroundColor: color.bg,
-        tension: 0.25,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      };
+    const lineDatasets = (lmcKey, cpuKey) => filteredAlgorithms.flatMap((algorithmId, index) => {
+      const lmcColor = CHART_COLORS[index % CHART_COLORS.length];
+      const cpuColor = CPU_CHART_COLORS[index % CPU_CHART_COLORS.length];
+      const points = groupedByAlgorithm[algorithmId];
+
+      return [
+        {
+          label: `${algorithmId} LMC`,
+          data: points.map((point) => ({
+            x: point.inputSize,
+            y: toChartValue(point[lmcKey])
+          })),
+          borderColor: lmcColor.border,
+          backgroundColor: lmcColor.bg,
+          tension: 0.25,
+          fill: true,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        },
+        {
+          label: `${algorithmId} CPU`,
+          data: points.map((point) => ({
+            x: point.inputSize,
+            y: toChartValue(point[cpuKey])
+          })),
+          borderColor: cpuColor.border,
+          backgroundColor: cpuColor.bg,
+          borderDash: [6, 4],
+          tension: 0.25,
+          fill: false,
+          pointRadius: 4,
+          pointHoverRadius: 6
+        }
+      ];
     });
 
     if (complexityInstance.current) complexityInstance.current.destroy();
@@ -121,7 +151,7 @@ export default function Charts() {
     if (complexityChartRef.current) {
       complexityInstance.current = new Chart(complexityChartRef.current, {
         type: 'line',
-        data: { datasets: lineDatasets('instructionCount') },
+        data: { datasets: lineDatasets('instructionCount', 'nativeInstructions') },
         options: {
           ...commonOptions,
           scales: {
@@ -142,7 +172,7 @@ export default function Charts() {
     if (memoryChartRef.current) {
       memoryInstance.current = new Chart(memoryChartRef.current, {
         type: 'line',
-        data: { datasets: lineDatasets('memoryAccess') },
+        data: { datasets: lineDatasets('memoryAccess', 'nativeMemoryAccess') },
         options: {
           ...commonOptions,
           scales: {
@@ -175,16 +205,38 @@ export default function Charts() {
             t('metrics.branches'),
             t('metrics.cycles')
           ],
-          datasets: filteredAlgorithms.map((algorithmId, index) => {
+          datasets: filteredAlgorithms.flatMap((algorithmId, index) => {
             const result = latestResults[index];
-            const color = CHART_COLORS[index % CHART_COLORS.length];
-            return {
-              label: algorithmId,
-              data: [result.instructionCount, result.memoryAccess, result.branchCount, result.cycles],
-              borderColor: color.border,
-              backgroundColor: color.bg,
-              pointBackgroundColor: color.border
-            };
+            const lmcColor = CHART_COLORS[index % CHART_COLORS.length];
+            const cpuColor = CPU_CHART_COLORS[index % CPU_CHART_COLORS.length];
+
+            return [
+              {
+                label: `${algorithmId} LMC`,
+                data: [
+                  toChartValue(result.instructionCount),
+                  toChartValue(result.memoryAccess),
+                  toChartValue(result.branchCount),
+                  toChartValue(result.cycles)
+                ],
+                borderColor: lmcColor.border,
+                backgroundColor: lmcColor.bg,
+                pointBackgroundColor: lmcColor.border
+              },
+              {
+                label: `${algorithmId} CPU`,
+                data: [
+                  toChartValue(result.nativeInstructions),
+                  toChartValue(result.nativeMemoryAccess),
+                  toChartValue(result.nativeBranchCount),
+                  toChartValue(result.nativeCycles)
+                ],
+                borderColor: cpuColor.border,
+                backgroundColor: cpuColor.bg,
+                borderDash: [6, 4],
+                pointBackgroundColor: cpuColor.border
+              }
+            ];
           })
         },
         options: {

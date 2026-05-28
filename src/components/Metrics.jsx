@@ -8,30 +8,46 @@ export default function Metrics() {
   const { t } = useI18n();
   const { metrics } = useBenchmark();
   const sectionRef = useRef(null);
+  const lmcMetrics = metrics?.lmc || {
+    instructions: metrics?.instructions || 0,
+    memory: metrics?.memory || 0,
+    branches: metrics?.branches || 0,
+    cycles: metrics?.cycles || 0
+  };
+  const cpuMetrics = metrics?.cpu || {
+    instructions: 0,
+    memory: 0,
+    branches: 0,
+    cycles: 0
+  };
 
   const metricsList = [
     {
       key: 'instructions',
       label: t('metrics.instructions'),
-      value: metrics.instructions,
+      lmcValue: lmcMetrics.instructions,
+      cpuValue: cpuMetrics.instructions,
       icon: <Activity size={20} />
     },
     {
       key: 'memory',
       label: t('metrics.memory'),
-      value: metrics.memory,
+      lmcValue: lmcMetrics.memory,
+      cpuValue: cpuMetrics.memory,
       icon: <HardDrive size={20} />
     },
     {
       key: 'branches',
       label: t('metrics.branches'),
-      value: metrics.branches,
+      lmcValue: lmcMetrics.branches,
+      cpuValue: cpuMetrics.branches,
       icon: <GitBranch size={20} />
     },
     {
       key: 'cycles',
       label: t('metrics.cycles'),
-      value: metrics.cycles,
+      lmcValue: lmcMetrics.cycles,
+      cpuValue: cpuMetrics.cycles,
       icon: <Clock size={20} />
     }
   ];
@@ -58,7 +74,16 @@ export default function Metrics() {
     }, sectionRef);
 
     return () => ctx.revert();
-  }, [metrics.instructions, metrics.memory, metrics.branches, metrics.cycles]);
+  }, [
+    lmcMetrics.instructions,
+    lmcMetrics.memory,
+    lmcMetrics.branches,
+    lmcMetrics.cycles,
+    cpuMetrics.instructions,
+    cpuMetrics.memory,
+    cpuMetrics.branches,
+    cpuMetrics.cycles
+  ]);
 
   return (
     <section id="metrics" className="section" ref={sectionRef}>
@@ -70,7 +95,16 @@ export default function Metrics() {
           <div key={metric.key} className="metric-item">
             <div className="metric-icon">{metric.icon}</div>
             <span className="metric-label">{metric.label}</span>
-            <span className="metric-value">{metric.value.toLocaleString()}</span>
+            <div className="metric-pair">
+              <div className="metric-channel">
+                <span className="metric-source">LMC</span>
+                <span className="metric-value">{metric.lmcValue.toLocaleString()}</span>
+              </div>
+              <div className="metric-channel metric-channel-cpu">
+                <span className="metric-source">CPU</span>
+                <span className="metric-value cpu-value">{metric.cpuValue.toLocaleString()}</span>
+              </div>
+            </div>
           </div>
         ))}
       </div>

@@ -3,7 +3,7 @@ import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
 import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData, formatDuration, formatMultiplier } from '../utils/cpu';
-import { Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge } from 'lucide-react';
+import { Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge, GitBranch } from 'lucide-react';
 import gsap from 'gsap';
 
 export default function Benchmark() {
@@ -100,8 +100,18 @@ export default function Benchmark() {
   const handleRun = async () => {
     setShowComparison(false);
     const benchmarkResult = await runBenchmark(algorithm, inputSize);
-    
-    const nativeResult = benchmarkNativeCode(algorithm, inputSize);
+    const latest = benchmarkResult?.latest;
+    const nativeResult = latest
+      ? {
+          executionTime: latest.nativeExecutionTime,
+          measuredTime: latest.nativeMeasuredTime,
+          instructions: latest.nativeInstructions,
+          memoryAccess: latest.nativeMemoryAccess,
+          branchCount: latest.nativeBranchCount,
+          cycles: latest.nativeCycles,
+          iterations: latest.nativeIterations
+        }
+      : benchmarkNativeCode(algorithm, inputSize);
     const lmcResult = makeLMCComparisonData(benchmarkResult?.latest);
     
     const speedup = nativeResult.executionTime > 0
@@ -260,6 +270,16 @@ export default function Benchmark() {
                   <span className="metric-label">{t('comparison.memoryAccess')}</span>
                   <span className="metric-value">{comparison.lmc.memoryAccess.toLocaleString()}</span>
                 </div>
+                <div className="metric-row">
+                  <GitBranch size={14} />
+                  <span className="metric-label">{t('metrics.branches')}</span>
+                  <span className="metric-value">{comparison.lmc.branches.toLocaleString()}</span>
+                </div>
+                <div className="metric-row">
+                  <Cpu size={14} />
+                  <span className="metric-label">{t('metrics.cycles')}</span>
+                  <span className="metric-value">{comparison.lmc.cycles.toLocaleString()}</span>
+                </div>
                 <div className="spec-tags">
                   <span className="tag disabled">{t('comparison.cache')}: None</span>
                   <span className="tag disabled">{t('comparison.pipeline')}: None</span>
@@ -287,6 +307,16 @@ export default function Benchmark() {
                   <Database size={14} />
                   <span className="metric-label">{t('comparison.memoryAccess')}</span>
                   <span className="metric-value">{comparison.native.memoryAccess.toLocaleString()}</span>
+                </div>
+                <div className="metric-row">
+                  <GitBranch size={14} />
+                  <span className="metric-label">{t('metrics.branches')}</span>
+                  <span className="metric-value">{comparison.native.branchCount.toLocaleString()}</span>
+                </div>
+                <div className="metric-row">
+                  <Cpu size={14} />
+                  <span className="metric-label">{t('metrics.cycles')}</span>
+                  <span className="metric-value">{comparison.native.cycles.toLocaleString()}</span>
                 </div>
                 <div className="spec-tags">
                   <span className="tag enabled">L1/L2/L3 Cache</span>

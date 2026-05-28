@@ -60,6 +60,7 @@ export function getCPUInfo() {
 function runNativeWorkload(algorithm, inputSize) {
   let instructions = 0;
   let memoryOps = 0;
+  let branches = 0;
   let result = 0;
 
   switch (algorithm) {
@@ -76,6 +77,7 @@ function runNativeWorkload(algorithm, inputSize) {
         result += i;
         instructions += 2;
         memoryOps += 2;
+        branches++;
       }
       break;
     }
@@ -85,6 +87,7 @@ function runNativeWorkload(algorithm, inputSize) {
         result += a;
         instructions += 2;
         memoryOps += 2;
+        branches++;
       }
       break;
     }
@@ -94,6 +97,7 @@ function runNativeWorkload(algorithm, inputSize) {
         result *= i;
         instructions += 2;
         memoryOps += 2;
+        branches++;
       }
       break;
     }
@@ -109,6 +113,7 @@ function runNativeWorkload(algorithm, inputSize) {
           curr = next;
           instructions += 3;
           memoryOps += 3;
+          branches++;
         }
         result = curr;
       }
@@ -120,6 +125,7 @@ function runNativeWorkload(algorithm, inputSize) {
           result++;
           instructions += 3;
           memoryOps += 2;
+          branches++;
         }
       }
       break;
@@ -130,6 +136,7 @@ function runNativeWorkload(algorithm, inputSize) {
         result++;
         instructions += 2;
         memoryOps += 2;
+        branches++;
       }
       break;
     }
@@ -139,6 +146,7 @@ function runNativeWorkload(algorithm, inputSize) {
         result *= 2;
         instructions += 2;
         memoryOps += 2;
+        branches++;
       }
       break;
     }
@@ -147,7 +155,13 @@ function runNativeWorkload(algorithm, inputSize) {
       memoryOps = 1;
   }
 
-  return { result, instructions, memoryOps };
+  return {
+    result,
+    instructions,
+    memoryOps,
+    branches,
+    cycles: Math.max(1, instructions + branches)
+  };
 }
 
 export function benchmarkNativeCode(algorithm, inputSize) {
@@ -156,6 +170,8 @@ export function benchmarkNativeCode(algorithm, inputSize) {
   let iterations = 0;
   let totalInstructions = 0;
   let totalMemoryOps = 0;
+  let totalBranches = 0;
+  let totalCycles = 0;
   let checksum = 0;
 
   for (let i = 0; i < 128; i++) {
@@ -173,6 +189,8 @@ export function benchmarkNativeCode(algorithm, inputSize) {
       checksum += run.result;
       totalInstructions += run.instructions;
       totalMemoryOps += run.memoryOps;
+      totalBranches += run.branches;
+      totalCycles += run.cycles;
       iterations++;
     }
 
@@ -186,6 +204,8 @@ export function benchmarkNativeCode(algorithm, inputSize) {
     measuredTime: elapsedTime,
     instructions: Math.round(totalInstructions / Math.max(iterations, 1)),
     memoryAccess: Math.round(totalMemoryOps / Math.max(iterations, 1)),
+    branchCount: Math.round(totalBranches / Math.max(iterations, 1)),
+    cycles: Math.round(totalCycles / Math.max(iterations, 1)),
     iterations,
     checksum
   };
@@ -217,6 +237,7 @@ export function makeLMCComparisonData(result) {
   return {
     instructions: result?.instructionCount || 0,
     memoryAccess: result?.memoryAccess || 0,
+    branches: result?.branchCount || 0,
     cycles,
     executionTime: (cycles / LMC_REFERENCE_CLOCK_HZ) * 1000,
     output: result?.output || [],

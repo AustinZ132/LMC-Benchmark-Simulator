@@ -1072,6 +1072,42 @@ textarea {
   font-feature-settings: 'tnum';
 }
 
+.metric-pair {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.metric-channel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background-color: var(--color-canvas);
+  border: 1px solid transparent;
+  border-radius: var(--rounded-xs);
+}
+
+.metric-channel-cpu {
+  background-color: rgba(0, 112, 243, 0.06);
+  border-color: rgba(0, 112, 243, 0.16);
+}
+
+.metric-source {
+  font-size: var(--text-xs);
+  font-weight: var(--font-semibold);
+  color: var(--color-mute);
+}
+
+.metric-channel .metric-value {
+  font-size: var(--text-xl);
+}
+
+.metric-channel .cpu-value {
+  color: var(--color-link);
+}
+
 /* Charts */
 .charts-grid {
   display: grid;

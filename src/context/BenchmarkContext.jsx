@@ -1,8 +1,26 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { LMC } from '../utils/lmc';
 import { ALGORITHMS, getBenchmarkInput } from '../utils/algorithms';
+import { benchmarkNativeCode } from '../utils/cpu';
 
 const BenchmarkContext = createContext();
+
+function makeMetricSnapshot(result = {}) {
+  return {
+    lmc: {
+      instructions: result.instructionCount || 0,
+      memory: result.memoryAccess || 0,
+      branches: result.branchCount || 0,
+      cycles: result.cycles || 0
+    },
+    cpu: {
+      instructions: result.nativeInstructions || 0,
+      memory: result.nativeMemoryAccess || 0,
+      branches: result.nativeBranchCount || 0,
+      cycles: result.nativeCycles || 0
+    }
+  };
+}
 
 export function BenchmarkProvider({ children }) {
   const [results, setResults] = useState([]);
@@ -10,12 +28,7 @@ export function BenchmarkProvider({ children }) {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState('ready');
   const [statusText, setStatusText] = useState('');
-  const [metrics, setMetrics] = useState({
-    instructions: 0,
-    memory: 0,
-    branches: 0,
-    cycles: 0
-  });
+  const [metrics, setMetrics] = useState(makeMetricSnapshot());
 
   const runBenchmark = useCallback(async (algorithmId, inputSize) => {
     const algorithm = ALGORITHMS[algorithmId];
@@ -39,12 +52,20 @@ export function BenchmarkProvider({ children }) {
       lmc.setInput(input);
       
       const result = lmc.run();
+      const nativeResult = benchmarkNativeCode(algorithmId, size);
       testResults.push({
         algorithmId,
         algorithmNameKey: algorithm.nameKey,
         inputSize: size,
         input,
         codeSize: algorithm.code.split('\n').filter((line) => line.trim() && !line.trim().startsWith(';')).length,
+        nativeExecutionTime: nativeResult.executionTime,
+        nativeMeasuredTime: nativeResult.measuredTime,
+        nativeInstructions: nativeResult.instructions,
+        nativeMemoryAccess: nativeResult.memoryAccess,
+        nativeBranchCount: nativeResult.branchCount,
+        nativeCycles: nativeResult.cycles,
+        nativeIterations: nativeResult.iterations,
         ...result
       });
 
@@ -61,12 +82,7 @@ export function BenchmarkProvider({ children }) {
     };
 
     setResults(testResults);
-    setMetrics({
-      instructions: latest.instructionCount,
-      memory: latest.memoryAccess,
-      branches: latest.branchCount,
-      cycles: latest.cycles
-    });
+    setMetrics(makeMetricSnapshot(latest));
     setIsRunning(false);
     setStatus('completed');
     setStatusText(`Completed ${algorithmId} at n=${inputSize}`);
@@ -80,7 +96,7 @@ export function BenchmarkProvider({ children }) {
 
   const resetBenchmark = useCallback(() => {
     setResults([]);
-    setMetrics({ instructions: 0, memory: 0, branches: 0, cycles: 0 });
+    setMetrics(makeMetricSnapshot());
     setStatus('ready');
     setStatusText('');
     setProgress(0);
