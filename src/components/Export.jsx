@@ -1,16 +1,48 @@
 import React, { useCallback, useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
-import { Download, FileImage, FileSpreadsheet, FileText } from 'lucide-react';
+import Turnstile from './Turnstile';
+import { Download, FileImage, FileSpreadsheet, FileText, ShieldCheck, X } from 'lucide-react';
+
+async function verifyTurnstileToken(token) {
+  if (!token) return false;
+  const allowUnverifiedFallback = import.meta.env.DEV ||
+    import.meta.env.VITE_TURNSTILE_ALLOW_UNVERIFIED === 'true';
+
+  try {
+    const response = await fetch('/api/turnstile', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, action: 'export' })
+    });
+    const result = await response.json();
+
+    if (result.success) return true;
+    if (result.configurationRequired && allowUnverifiedFallback) return true;
+    return false;
+  } catch (error) {
+    return allowUnverifiedFallback;
+  }
+}
 
 export default function Export() {
   const { t } = useI18n();
   const { results } = useBenchmark();
   const [isExporting, setIsExporting] = useState(false);
+  const [isVerified, setIsVerified] = useState(() => {
+    try {
+      return window.sessionStorage.getItem('lmc-export-verified') === 'true';
+    } catch (error) {
+      return false;
+    }
+  });
+  const [pendingExport, setPendingExport] = useState(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [verificationError, setVerificationError] = useState('');
 
   const getExportTarget = () => document.getElementById('benchmark-report');
 
-  const exportPNG = useCallback(async () => {
+  const performPNGExport = useCallback(async () => {
     setIsExporting(true);
     try {
       const element = getExportTarget();
@@ -30,7 +62,7 @@ export default function Export() {
     }
   }, []);
 
-  const exportCSV = useCallback(() => {
+  const performCSVExport = useCallback(() => {
     if (results.length === 0) return;
     setIsExporting(true);
 
@@ -67,7 +99,7 @@ export default function Export() {
     setIsExporting(false);
   }, [results]);
 
-  const exportPDF = useCallback(async () => {
+  const performPDFExport = useCallback(async () => {
     setIsExporting(true);
     try {
       const element = getExportTarget();
@@ -104,6 +136,64 @@ export default function Export() {
     }
   }, []);
 
+  const runExport = useCallback((type) => {
+    if (type === 'png') {
+      performPNGExport();
+    } else if (type === 'csv') {
+      performCSVExport();
+    } else if (type === 'pdf') {
+      performPDFExport();
+    }
+  }, [performCSVExport, performPDFExport, performPNGExport]);
+
+  const requestExport = useCallback((type) => {
+    if (isVerified) {
+      runExport(type);
+      return;
+    }
+
+    setPendingExport(type);
+    setVerificationError('');
+  }, [isVerified, runExport]);
+
+  const handleVerify = useCallback(async (token) => {
+    if (!token) {
+      setVerificationError(t('security.expired'));
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError('');
+    const verified = await verifyTurnstileToken(token);
+    setIsVerifying(false);
+
+    if (!verified) {
+      setVerificationError(t('security.failed'));
+      return;
+    }
+
+    try {
+      window.sessionStorage.setItem('lmc-export-verified', 'true');
+    } catch (error) {
+      // Session storage is optional; verification still works for this page view.
+    }
+
+    setIsVerified(true);
+    const exportType = pendingExport;
+    setPendingExport(null);
+    runExport(exportType);
+  }, [pendingExport, runExport, t]);
+
+  const handleVerifyError = useCallback(() => {
+    setIsVerifying(false);
+    setVerificationError(t('security.failed'));
+  }, [t]);
+
+  const closeVerification = useCallback(() => {
+    setPendingExport(null);
+    setVerificationError('');
+  }, []);
+
   return (
     <section id="export" className="section">
       <div className="section-header">
@@ -114,19 +204,35 @@ export default function Export() {
       </div>
       <div className="export-container">
         <div className="export-options">
-          <button onClick={exportPNG} className="button-secondary" disabled={isExporting}>
+          <button onClick={() => requestExport('png')} className="button-secondary" disabled={isExporting}>
             <FileImage size={16} />
             <span>{t('export.image')}</span>
           </button>
-          <button onClick={exportCSV} className="button-secondary" disabled={isExporting || results.length === 0}>
+          <button onClick={() => requestExport('csv')} className="button-secondary" disabled={isExporting || results.length === 0}>
             <FileSpreadsheet size={16} />
             <span>{t('export.data')}</span>
           </button>
-          <button onClick={exportPDF} className="button-primary" disabled={isExporting}>
+          <button onClick={() => requestExport('pdf')} className="button-primary" disabled={isExporting}>
             <FileText size={16} />
             <span>{t('export.report')}</span>
           </button>
         </div>
+        {pendingExport && !isVerified && (
+          <div className="export-verify">
+            <button className="verify-close" onClick={closeVerification} aria-label={t('security.close')}>
+              <X size={14} />
+            </button>
+            <div className="verify-header">
+              <ShieldCheck size={16} />
+              <span>{t('security.title')}</span>
+            </div>
+            <p className="verify-desc">{t('security.description')}</p>
+            <Turnstile onVerify={handleVerify} onError={handleVerifyError} action="export" />
+            {isVerifying && <p className="verify-status">{t('security.checking')}</p>}
+            {verificationError && <p className="verify-error">{verificationError}</p>}
+            <p className="verify-footer">{t('security.footer')}</p>
+          </div>
+        )}
       </div>
     </section>
   );

@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { token } = await readBody(req);
+    const { token, action } = await readBody(req);
     if (!token) {
       return res.status(400).json({ success: false, error: 'missing_token' });
     }
@@ -47,12 +47,14 @@ export default async function handler(req, res) {
     });
     const result = await response.json();
 
+    const actionMatches = !action || result.action === action;
+
     return res.status(200).json({
-      success: Boolean(result.success),
+      success: Boolean(result.success && actionMatches),
       challengeTs: result.challenge_ts,
       hostname: result.hostname,
       action: result.action,
-      errors: result['error-codes'] || []
+      errors: actionMatches ? (result['error-codes'] || []) : ['action_mismatch']
     });
   } catch (error) {
     return res.status(500).json({

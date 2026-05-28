@@ -98,11 +98,12 @@ export const en = {
     report: 'Export PDF'
   },
   security: {
-    title: 'LMC Benchmark Studio',
-    description: 'Complete the human verification before opening the simulator and benchmark tools.',
+    title: 'Verify before export',
+    description: 'Complete one Cloudflare Turnstile check before exporting files to prevent automated abuse.',
     checking: 'Verifying...',
     failed: 'Verification did not pass. Refresh the challenge and try again.',
     expired: 'The verification expired. Complete the challenge again.',
+    close: 'Close verification',
     footer: 'Protected by Cloudflare Turnstile'
   },
   algorithms: {

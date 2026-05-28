@@ -98,11 +98,12 @@ export const zh = {
     report: '导出 PDF'
   },
   security: {
-    title: 'LMC Benchmark Studio',
-    description: '请先完成人机验证，然后继续访问模拟器和基准测试。',
+    title: '导出前验证',
+    description: '为了防止自动化滥用，导出文件前需要完成一次 Cloudflare Turnstile 验证。',
     checking: '正在验证...',
     failed: '验证没有通过，请刷新挑战后重试。',
     expired: '验证已过期，请重新完成挑战。',
+    close: '关闭验证',
     footer: '受 Cloudflare Turnstile 保护'
   },
   algorithms: {
