@@ -6,7 +6,7 @@ import Export from '../components/Export';
 
 export default function BenchmarkPage() {
   return (
-    <div className="page">
+    <div className="page" id="benchmark-report">
       <Benchmark />
       <Metrics />
       <Charts />

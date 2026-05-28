@@ -1,62 +1,60 @@
-import React, { useState, useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
-import { Download, FileImage, FileText, FileSpreadsheet, Shield } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
-import Turnstile from './Turnstile';
+import { Download, FileImage, FileSpreadsheet, FileText } from 'lucide-react';
 
 export default function Export() {
-  const { lang } = useI18n();
+  const { t } = useI18n();
   const { results } = useBenchmark();
-  const isZh = lang === 'zh';
-  const [isVerified, setIsVerified] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
 
-  const handleVerify = useCallback((token) => {
-    if (token) {
-      setIsVerified(true);
-    } else {
-      setIsVerified(false);
-    }
-  }, []);
-
-  const handleError = useCallback((error) => {
-    console.error('Turnstile error:', error);
-    setIsVerified(false);
-  }, []);
+  const getExportTarget = () => document.getElementById('benchmark-report');
 
   const exportPNG = useCallback(async () => {
-    if (!isVerified) return;
     setIsExporting(true);
     try {
-      const element = document.getElementById('export-container');
+      const element = getExportTarget();
       if (!element) return;
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
+      const { default: html2canvas } = await import('html2canvas');
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true
+      });
       const link = document.createElement('a');
-      link.download = 'lmc-benchmark.png';
+      link.download = 'lmc-benchmark-report.png';
       link.href = canvas.toDataURL('image/png');
       link.click();
-    } catch (error) {
-      console.error('Export PNG failed:', error);
+    } finally {
+      setIsExporting(false);
     }
-    setIsExporting(false);
-  }, [isVerified]);
+  }, []);
 
   const exportCSV = useCallback(() => {
-    if (!isVerified || results.length === 0) return;
+    if (results.length === 0) return;
     setIsExporting(true);
-    
-    const headers = ['Algorithm', 'InputSize', 'Instructions', 'MemoryAccess', 'Branches', 'Cycles'];
+
+    const headers = [
+      'Algorithm',
+      'InputSize',
+      'Input',
+      'Output',
+      'Instructions',
+      'MemoryAccess',
+      'Branches',
+      'Cycles'
+    ];
     const csvContent = [
       headers.join(','),
-      ...results.map(r => [
-        r.algorithmId,
-        r.inputSize,
-        r.instructionCount,
-        r.memoryAccess,
-        r.branchCount,
-        r.cycles
+      ...results.map((result) => [
+        result.algorithmId,
+        result.inputSize,
+        `"${result.input.join(' ')}"`,
+        `"${result.output.join(' ')}"`,
+        result.instructionCount,
+        result.memoryAccess,
+        result.branchCount,
+        result.cycles
       ].join(','))
     ].join('\n');
 
@@ -67,69 +65,66 @@ export default function Export() {
     link.click();
     URL.revokeObjectURL(link.href);
     setIsExporting(false);
-  }, [results, isVerified]);
+  }, [results]);
 
   const exportPDF = useCallback(async () => {
-    if (!isVerified) return;
     setIsExporting(true);
     try {
-      const element = document.getElementById('export-container');
+      const element = getExportTarget();
       if (!element) return;
-      const canvas = await html2canvas(element, { backgroundColor: '#ffffff', scale: 2 });
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import('html2canvas'),
+        import('jspdf')
+      ]);
+      const canvas = await html2canvas(element, {
+        backgroundColor: '#ffffff',
+        scale: 2,
+        useCORS: true
+      });
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 210;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
+      let position = 0;
+      let remainingHeight = imgHeight;
+
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      remainingHeight -= 297;
+
+      while (remainingHeight > 0) {
+        position = remainingHeight - imgHeight;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+        remainingHeight -= 297;
+      }
+
       pdf.save('lmc-benchmark-report.pdf');
-    } catch (error) {
-      console.error('Export PDF failed:', error);
+    } finally {
+      setIsExporting(false);
     }
-    setIsExporting(false);
-  }, [isVerified]);
+  }, []);
 
   return (
     <section id="export" className="section">
       <div className="section-header">
         <h2 className="section-title">
-          <Download size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-          {isZh ? '导出数据' : 'Export Data'}
+          <Download size={20} />
+          {t('export.title')}
         </h2>
       </div>
-      <div id="export-container" className="export-container">
-        {!isVerified && (
-          <div className="export-verify">
-            <div className="verify-header">
-              <Shield size={20} />
-              <span>{isZh ? '请先完成验证' : 'Please verify first'}</span>
-            </div>
-            <Turnstile onVerify={handleVerify} onError={handleError} action="export" />
-          </div>
-        )}
+      <div className="export-container">
         <div className="export-options">
-          <button 
-            onClick={exportPNG} 
-            className="button-secondary"
-            disabled={!isVerified || isExporting}
-          >
+          <button onClick={exportPNG} className="button-secondary" disabled={isExporting}>
             <FileImage size={16} />
-            <span>{isZh ? '导出图片' : 'Export Image'}</span>
+            <span>{t('export.image')}</span>
           </button>
-          <button 
-            onClick={exportCSV} 
-            className="button-secondary"
-            disabled={!isVerified || isExporting || results.length === 0}
-          >
+          <button onClick={exportCSV} className="button-secondary" disabled={isExporting || results.length === 0}>
             <FileSpreadsheet size={16} />
-            <span>{isZh ? '导出数据' : 'Export Data'}</span>
+            <span>{t('export.data')}</span>
           </button>
-          <button 
-            onClick={exportPDF} 
-            className="button-primary"
-            disabled={!isVerified || isExporting}
-          >
+          <button onClick={exportPDF} className="button-primary" disabled={isExporting}>
             <FileText size={16} />
-            <span>{isZh ? '导出报告' : 'Export Report'}</span>
+            <span>{t('export.report')}</span>
           </button>
         </div>
       </div>

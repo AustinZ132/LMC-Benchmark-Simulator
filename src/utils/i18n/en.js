@@ -1,23 +1,41 @@
 export const en = {
   app: {
     title: 'LMC Benchmark Tool',
-    subtitle: 'Algorithm Complexity Analysis based on Little Man Computer'
+    subtitle: 'Algorithm complexity and system performance analysis based on the Little Man Computer'
   },
   nav: {
     home: 'Home',
-    editor: 'Editor',
+    editor: 'Simulator',
     benchmark: 'Benchmark',
     analysis: 'Analysis',
     comparison: 'Comparison',
     export: 'Export'
   },
+  hero: {
+    badge: 'Computer architecture teaching tool',
+    title: 'LMC Benchmark Studio',
+    subtitle: 'Run LMC programs and observe how fetch, execute, memory access, and algorithm complexity connect.',
+    simulatorTitle: 'LMC Simulator',
+    simulatorDesc: 'Write, run, and validate LMC assembly programs.',
+    benchmarkTitle: 'Benchmark',
+    benchmarkDesc: 'Collect instruction, memory access, and branch metrics.'
+  },
   editor: {
-    title: 'Code Editor',
+    title: 'LMC Simulator',
     placeholder: 'Enter LMC code here...',
     run: 'Run',
     reset: 'Reset',
     step: 'Step',
-    stop: 'Stop'
+    stop: 'Stop',
+    presets: 'Presets',
+    copy: 'Copy',
+    copied: 'Copied',
+    input: 'Input',
+    output: 'Output',
+    inputHint: 'One number per line',
+    editorHint: 'Tab to indent',
+    noOutput: 'No output',
+    runHint: 'Click Run to execute'
   },
   benchmark: {
     title: 'Benchmark',
@@ -26,31 +44,35 @@ export const en = {
     runTest: 'Run Test',
     running: 'Running test...',
     completed: 'Test completed',
-    results: 'Test Results'
+    results: 'Test Results',
+    system: 'Current System'
   },
   metrics: {
     title: 'Performance Metrics',
     instructions: 'Instruction Count',
     memory: 'Memory Access Count',
-    branches: 'Branch Count',
+    branches: 'Taken Branches',
     cycles: 'Clock Cycles'
   },
   charts: {
-    title: 'Data Visualization',
-    complexity: 'Complexity Curve',
-    memory: 'Memory Access Pattern',
-    comparison: 'Architecture Comparison',
+    title: 'Data Analysis',
+    complexity: 'Instruction Growth',
+    memory: 'Memory Access Growth',
+    comparison: 'Metric Radar',
     inputSize: 'Input Size',
     count: 'Count',
-    algorithm: 'Algorithm'
+    algorithm: 'Algorithm',
+    empty: 'Run a benchmark to show charts here.',
+    resetZoom: 'Reset zoom',
+    zoomHint: 'Scroll to zoom, drag to pan'
   },
   comparison: {
-    title: 'LMC vs Modern CPU Architecture',
+    title: 'LMC vs Modern CPU',
     runComparison: 'Run Comparison',
-    lmc: 'LMC (Little Man Computer)',
-    modern: 'Modern CPU (x86/ARM)',
+    lmc: 'LMC',
+    modern: 'Modern CPU',
     clockSpeed: 'Clock Speed',
-    executionTime: 'Execution Time',
+    executionTime: 'Estimated Time',
     instructions: 'Instructions',
     memoryAccess: 'Memory Access',
     cache: 'Cache',
@@ -58,58 +80,58 @@ export const en = {
     branchPrediction: 'Branch Prediction',
     outOfOrder: 'Out-of-Order',
     speedup: 'Speedup',
-    whyFaster: 'Why faster?',
+    whyFaster: 'Why modern CPUs are faster',
+    yourCpuIs: 'Your CPU is about',
+    fasterThanLmc: 'times faster than the 1Hz LMC model',
     reasons: {
-      pipelining: 'Pipelining: Execute multiple instructions simultaneously',
-      cache: 'Cache: Fast memory close to CPU',
-      branchPrediction: 'Branch Prediction: Guess jump direction before knowing',
-      outOfOrder: 'Out-of-Order: Reorder instructions for efficiency',
-      multiCore: 'Multi-core: Parallel processing'
+      pipelining: 'Pipelining overlaps different stages of multiple instructions.',
+      cache: 'Cache keeps frequently used data close to the CPU.',
+      branchPrediction: 'Branch prediction reduces stalls while waiting for jump outcomes.',
+      outOfOrder: 'Out-of-order execution rearranges work when dependencies allow it.'
     }
   },
   export: {
     title: 'Export Data',
     image: 'Export Image',
-    data: 'Export Data',
-    report: 'Export Report',
-    format: 'Format',
-    quality: 'Quality',
-    filename: 'Filename',
-    success: 'Export successful',
-    error: 'Export failed'
+    data: 'Export CSV',
+    report: 'Export PDF'
   },
   algorithms: {
     simpleArithmetic: {
-      name: 'Simple Arithmetic',
-      description: 'Implement A+B basic operation'
+      name: 'Simple Addition',
+      description: 'Read two numbers and compute A+B.'
     },
     loopSummation: {
       name: 'Loop Summation',
-      description: 'Calculate sum from 1 to N'
+      description: 'Calculate the sum from 1 to N.'
     },
     multiplication: {
-      name: 'Multiplication Simulation',
-      description: 'Implement A×B via repeated addition'
+      name: 'Loop Multiplication',
+      description: 'Implement A times B with repeated addition.'
     },
     factorial: {
       name: 'Factorial',
-      description: 'Calculate N factorial (N!)'
+      description: 'Compute N! with nested loops and no hardware multiply instruction.'
     },
     fibonacci: {
-      name: 'Fibonacci Sequence',
-      description: 'Calculate the Nth Fibonacci number'
+      name: 'Fibonacci',
+      description: 'Compute the Nth Fibonacci number.'
     },
     bubbleSort: {
-      name: 'Bubble Sort',
-      description: 'Sort array using bubble sort (requires SMC)'
+      name: 'Bubble Sort Workload',
+      description: 'Model the nested comparison count of bubble sort to show O(n^2) growth.'
+    },
+    smcTraversal: {
+      name: 'Self-Modifying Traversal',
+      description: 'Increment the address field of an LDA instruction at runtime.'
     },
     linearSearch: {
-      name: 'Linear Search',
-      description: 'Search for target value in array'
+      name: 'Linear Search Workload',
+      description: 'Inspect N positions one by one to show linear growth.'
     },
     power: {
       name: 'Power',
-      description: 'Calculate Base raised to Exp power'
+      description: 'Compute 2 to the Nth power using repeated multiplication.'
     }
   },
   labels: {

@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { LMC } from '../utils/lmc';
-import { ALGORITHMS } from '../utils/algorithms';
+import { ALGORITHMS, getBenchmarkInput } from '../utils/algorithms';
 
 const BenchmarkContext = createContext();
 
@@ -23,45 +23,59 @@ export function BenchmarkProvider({ children }) {
 
     setIsRunning(true);
     setStatus('running');
-    setStatusText(`Running ${algorithm.name} with n=${inputSize}...`);
+    setStatusText(`Running ${algorithmId} with n=${inputSize}...`);
     setProgress(0);
 
-    const lmc = new LMC();
     const testResults = [];
+    const sizeSet = new Set((algorithm.inputSizes || [inputSize]).filter((size) => size <= inputSize));
+    sizeSet.add(inputSize);
+    const sizes = [...sizeSet].sort((a, b) => a - b);
 
-    for (let i = 0; i < inputSize; i++) {
-      lmc.reset();
+    for (let i = 0; i < sizes.length; i++) {
+      const size = sizes[i];
+      const lmc = new LMC();
+      const input = getBenchmarkInput(algorithm, size);
       lmc.loadCode(algorithm.code);
-      lmc.setInput(i + 1);
+      lmc.setInput(input);
       
       const result = lmc.run();
       testResults.push({
-        inputSize: i + 1,
+        algorithmId,
+        algorithmNameKey: algorithm.nameKey,
+        inputSize: size,
+        input,
+        codeSize: algorithm.code.split('\n').filter((line) => line.trim() && !line.trim().startsWith(';')).length,
         ...result
       });
 
-      setProgress(((i + 1) / inputSize) * 100);
+      setProgress(((i + 1) / sizes.length) * 100);
       
-      if (i % 10 === 0) {
-        await new Promise(resolve => setTimeout(resolve, 0));
-      }
+      await new Promise(resolve => setTimeout(resolve, 0));
     }
 
-    const totalMetrics = testResults.reduce((acc, r) => ({
-      instructions: acc.instructions + r.instructionCount,
-      memory: acc.memory + r.memoryAccess,
-      branches: acc.branches + r.branchCount,
-      cycles: acc.cycles + r.cycles
-    }), { instructions: 0, memory: 0, branches: 0, cycles: 0 });
+    const latest = testResults[testResults.length - 1] || {
+      instructionCount: 0,
+      memoryAccess: 0,
+      branchCount: 0,
+      cycles: 0
+    };
 
     setResults(testResults);
-    setMetrics(totalMetrics);
+    setMetrics({
+      instructions: latest.instructionCount,
+      memory: latest.memoryAccess,
+      branches: latest.branchCount,
+      cycles: latest.cycles
+    });
     setIsRunning(false);
     setStatus('completed');
-    setStatusText('Test completed');
+    setStatusText(`Completed ${algorithmId} at n=${inputSize}`);
     setProgress(100);
 
-    return testResults;
+    return {
+      series: testResults,
+      latest
+    };
   }, []);
 
   const resetBenchmark = useCallback(() => {

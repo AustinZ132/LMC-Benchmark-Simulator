@@ -1,23 +1,41 @@
 export const zh = {
   app: {
     title: 'LMC 基准测试工具',
-    subtitle: '基于小人计算机的算法复杂度分析'
+    subtitle: '基于小人计算机的算法复杂度与系统性能分析'
   },
   nav: {
     home: '首页',
-    editor: '编辑器',
+    editor: '模拟器',
     benchmark: '基准测试',
-    analysis: '分析',
+    analysis: '数据分析',
     comparison: '架构对比',
     export: '导出'
   },
+  hero: {
+    badge: '计算机体系结构教学工具',
+    title: 'LMC Benchmark Studio',
+    subtitle: '用可运行的 LMC 程序观察取指、执行、内存访问和算法复杂度之间的关系。',
+    simulatorTitle: 'LMC 模拟器',
+    simulatorDesc: '编写、运行并验证 LMC 汇编程序。',
+    benchmarkTitle: '基准测试',
+    benchmarkDesc: '收集指令数、内存访问和分支跳转数据。'
+  },
   editor: {
-    title: '代码编辑器',
+    title: 'LMC 模拟器',
     placeholder: '在此输入 LMC 代码...',
     run: '运行',
     reset: '重置',
-    step: '单步执行',
-    stop: '停止'
+    step: '单步',
+    stop: '停止',
+    presets: '预设',
+    copy: '复制',
+    copied: '已复制',
+    input: '输入',
+    output: '输出',
+    inputHint: '每行一个数字',
+    editorHint: 'Tab 缩进',
+    noOutput: '无输出',
+    runHint: '点击运行执行程序'
   },
   benchmark: {
     title: '基准测试',
@@ -26,31 +44,35 @@ export const zh = {
     runTest: '运行测试',
     running: '测试运行中...',
     completed: '测试完成',
-    results: '测试结果'
+    results: '测试结果',
+    system: '当前系统'
   },
   metrics: {
     title: '性能指标',
-    instructions: '指令执行次数',
+    instructions: '执行指令数',
     memory: '内存访问次数',
-    branches: '分支跳转次数',
-    cycles: '时钟周期数'
+    branches: '跳转次数',
+    cycles: '时钟周期'
   },
   charts: {
-    title: '数据可视化',
-    complexity: '复杂度曲线',
-    memory: '内存访问模式',
-    comparison: '架构对比',
+    title: '数据分析',
+    complexity: '指令增长曲线',
+    memory: '内存访问曲线',
+    comparison: '指标雷达图',
     inputSize: '输入规模',
     count: '次数',
-    algorithm: '算法'
+    algorithm: '算法',
+    empty: '运行一次基准测试后，这里会显示图表。',
+    resetZoom: '重置缩放',
+    zoomHint: '滚轮缩放，拖拽平移'
   },
   comparison: {
-    title: 'LMC vs 现代CPU架构对比',
+    title: 'LMC 与现代 CPU 对比',
     runComparison: '运行对比',
-    lmc: 'LMC (小人计算机)',
-    modern: '现代CPU (x86/ARM)',
+    lmc: 'LMC',
+    modern: '现代 CPU',
     clockSpeed: '时钟频率',
-    executionTime: '执行时间',
+    executionTime: '估算执行时间',
     instructions: '指令数',
     memoryAccess: '内存访问',
     cache: '缓存',
@@ -58,58 +80,58 @@ export const zh = {
     branchPrediction: '分支预测',
     outOfOrder: '乱序执行',
     speedup: '加速比',
-    whyFaster: '为什么更快？',
+    whyFaster: '现代 CPU 为什么更快',
+    yourCpuIs: '当前 CPU 约快',
+    fasterThanLmc: '倍于 1Hz LMC 模型',
     reasons: {
-      pipelining: '流水线：同时执行多条指令',
-      cache: '缓存：靠近CPU的快速内存',
-      branchPrediction: '分支预测：提前猜测跳转方向',
-      outOfOrder: '乱序执行：重排指令提高效率',
-      multiCore: '多核：并行处理'
+      pipelining: '流水线让多条指令的不同阶段重叠执行。',
+      cache: '缓存把常用数据放到离 CPU 更近的位置。',
+      branchPrediction: '分支预测减少等待跳转结果的停顿。',
+      outOfOrder: '乱序执行在依赖允许时重新安排指令顺序。'
     }
   },
   export: {
     title: '导出数据',
     image: '导出图片',
-    data: '导出数据',
-    report: '导出报告',
-    format: '格式',
-    quality: '质量',
-    filename: '文件名',
-    success: '导出成功',
-    error: '导出失败'
+    data: '导出 CSV',
+    report: '导出 PDF'
   },
   algorithms: {
     simpleArithmetic: {
-      name: '简单算术',
-      description: '实现 A+B 的基本运算'
+      name: '简单加法',
+      description: '读取两个数字并完成 A+B。'
     },
     loopSummation: {
       name: '循环求和',
-      description: '计算 1 到 N 的累加和'
+      description: '计算 1 到 N 的累加和。'
     },
     multiplication: {
-      name: '乘法模拟',
-      description: '通过重复加法实现 A×B'
+      name: '循环乘法',
+      description: '用重复加法实现 A×B。'
     },
     factorial: {
-      name: '阶乘计算',
-      description: '计算 N 的阶乘 (N!)'
+      name: '阶乘',
+      description: '用嵌套循环计算 N!，不依赖硬件乘法。'
     },
     fibonacci: {
-      name: '斐波那契数列',
-      description: '计算第 N 个斐波那契数'
+      name: '斐波那契',
+      description: '计算第 N 个斐波那契数。'
     },
     bubbleSort: {
-      name: '冒泡排序',
-      description: '对数组进行冒泡排序（需要自修改代码）'
+      name: '冒泡排序比较负载',
+      description: '模拟冒泡排序的双层比较次数，展示 O(n^2) 增长。'
+    },
+    smcTraversal: {
+      name: '自修改遍历演示',
+      description: '运行时修改 LDA 指令的地址字段，演示 LMC 的 SMC 技巧。'
     },
     linearSearch: {
-      name: '线性搜索',
-      description: '在数组中线性搜索目标值'
+      name: '线性搜索负载',
+      description: '逐项检查 N 个位置，展示线性增长。'
     },
     power: {
       name: '幂运算',
-      description: '计算 Base 的 Exp 次方'
+      description: '用重复乘法计算 2 的 N 次方。'
     }
   },
   labels: {

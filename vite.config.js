@@ -12,9 +12,17 @@ export default defineConfig({
     minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'chart.js'],
-          utils: ['html2canvas', 'jspdf']
+        manualChunks(id) {
+          if (!id.includes('node_modules')) return undefined;
+          if (id.includes('html2canvas')) return 'export-image';
+          if (id.includes('jspdf')) return 'export-pdf';
+          if (id.includes('dompurify')) return 'export-sanitize';
+          if (id.includes('react') || id.includes('scheduler')) return 'react-vendor';
+          if (id.includes('chart.js') || id.includes('chartjs-plugin-zoom')) return 'charts';
+          if (id.includes('lucide-react')) return 'icons';
+          if (id.includes('gsap')) return 'animation';
+          if (id.includes('ua-parser-js')) return 'system-info';
+          return 'vendor';
         }
       }
     }
@@ -22,7 +30,7 @@ export default defineConfig({
   server: {
     port: 3000,
     host: '0.0.0.0',
-    open: true
+    open: false
   },
   css: {
     devSourcemap: true

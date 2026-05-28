@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
-import { getCPUInfo, benchmarkNativeCode, getLMCComparisonData } from '../utils/cpu';
+import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData } from '../utils/cpu';
 import { Play, Loader, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge } from 'lucide-react';
 
 export default function Benchmark() {
   const { t } = useI18n();
   const { isRunning, progress, status, statusText, runBenchmark, resetBenchmark } = useBenchmark();
   const [algorithm, setAlgorithm] = useState('loopSummation');
-  const [inputSize, setInputSize] = useState(100);
+  const [inputSize, setInputSize] = useState(ALGORITHMS.loopSummation.inputSizes.at(-1));
   const [cpuInfo, setCpuInfo] = useState(null);
   const [comparison, setComparison] = useState(null);
   const [showComparison, setShowComparison] = useState(false);
@@ -21,14 +21,20 @@ export default function Benchmark() {
     setCpuInfo(getCPUInfo());
   }, []);
 
+  useEffect(() => {
+    setInputSize(selectedAlgorithm.inputSizes.at(-1));
+  }, [selectedAlgorithm]);
+
   const handleRun = async () => {
     setShowComparison(false);
-    await runBenchmark(algorithm, inputSize);
+    const benchmarkResult = await runBenchmark(algorithm, inputSize);
     
     const nativeResult = benchmarkNativeCode(algorithm, inputSize);
-    const lmcResult = getLMCComparisonData(algorithm, inputSize);
+    const lmcResult = makeLMCComparisonData(benchmarkResult?.latest);
     
-    const speedup = lmcResult.executionTime / nativeResult.executionTime;
+    const speedup = nativeResult.executionTime > 0
+      ? lmcResult.executionTime / nativeResult.executionTime
+      : 0;
     
     setComparison({
       native: nativeResult,
@@ -48,12 +54,12 @@ export default function Benchmark() {
     <section id="benchmark" className="section">
       <div className="section-header">
         <h2 className="section-title">
-          <Activity size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+          <Activity size={20} />
           {t('benchmark.title')}
         </h2>
         <div className="section-actions">
           {isRunning ? (
-            <button onClick={handleStop} className="button-primary" style={{ backgroundColor: '#ee0000' }}>
+            <button onClick={handleStop} className="button-primary button-danger">
               <Square size={16} />
               <span>{t('editor.stop')}</span>
             </button>
@@ -69,8 +75,9 @@ export default function Benchmark() {
       <div className="benchmark-layout">
         <div className="benchmark-controls">
           <div className="control-group">
-            <label className="control-label">{t('benchmark.selectAlgorithm')}</label>
+            <label className="control-label" htmlFor="benchmark-algorithm">{t('benchmark.selectAlgorithm')}</label>
             <select
+              id="benchmark-algorithm"
               value={algorithm}
               onChange={(e) => setAlgorithm(e.target.value)}
               className="form-input"
@@ -84,20 +91,17 @@ export default function Benchmark() {
             </select>
           </div>
           <div className="control-group">
-            <label className="control-label">{t('benchmark.inputSize')}</label>
+            <label className="control-label" htmlFor="benchmark-input-size">{t('benchmark.inputSize')}</label>
             <select
+              id="benchmark-input-size"
               value={inputSize}
               onChange={(e) => setInputSize(Number(e.target.value))}
               className="form-input"
               disabled={isRunning}
             >
-              <option value={10}>10</option>
-              <option value={50}>50</option>
-              <option value={100}>100</option>
-              <option value={500}>500</option>
-              <option value={1000}>1000</option>
-              <option value={5000}>5000</option>
-              <option value={10000}>10000</option>
+              {selectedAlgorithm.inputSizes.map((size) => (
+                <option key={size} value={size}>{size}</option>
+              ))}
             </select>
           </div>
           {selectedAlgorithm && (
@@ -113,7 +117,7 @@ export default function Benchmark() {
           <div className="cpu-info-card">
             <div className="cpu-info-header">
               <Cpu size={16} />
-              <span>Your System</span>
+              <span>{t('benchmark.system')}</span>
             </div>
             <div className="cpu-info-body">
               <div className="cpu-spec">
@@ -153,7 +157,7 @@ export default function Benchmark() {
       {showComparison && comparison && (
         <div className="comparison-section">
           <h3 className="comparison-title">
-            <Gauge size={18} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+            <Gauge size={18} />
             {t('comparison.title') || 'Performance Comparison'}
           </h3>
           
@@ -189,7 +193,7 @@ export default function Benchmark() {
             <div className="comparison-card native-card">
               <div className="card-header">
                 <Zap size={18} />
-                <span>Your CPU ({cpuInfo?.cpu})</span>
+                <span>{t('comparison.modern')} ({cpuInfo?.cpu})</span>
               </div>
               <div className="card-body">
                 <div className="metric-row">
@@ -218,9 +222,9 @@ export default function Benchmark() {
 
           <div className="speedup-bar">
             <div className="speedup-content">
-              <span className="speedup-label">Your CPU is</span>
+              <span className="speedup-label">{t('comparison.yourCpuIs')}</span>
               <span className="speedup-value">{comparison.speedup.toFixed(0)}x</span>
-              <span className="speedup-label">faster than LMC</span>
+              <span className="speedup-label">{t('comparison.fasterThanLmc')}</span>
             </div>
           </div>
 

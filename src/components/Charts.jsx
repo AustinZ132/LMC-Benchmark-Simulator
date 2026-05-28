@@ -3,12 +3,19 @@ import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { Chart, registerables } from 'chart.js';
 import zoomPlugin from 'chartjs-plugin-zoom';
-import { BarChart3, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { BarChart3, RotateCcw } from 'lucide-react';
 
 Chart.register(...registerables, zoomPlugin);
 
+const CHART_COLORS = [
+  { border: '#171717', bg: 'rgba(23, 23, 23, 0.08)' },
+  { border: '#0070f3', bg: 'rgba(0, 112, 243, 0.08)' },
+  { border: '#7928ca', bg: 'rgba(121, 40, 202, 0.08)' },
+  { border: '#f5a623', bg: 'rgba(245, 166, 35, 0.12)' }
+];
+
 export default function Charts() {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const { results } = useBenchmark();
   const complexityChartRef = useRef(null);
   const memoryChartRef = useRef(null);
@@ -18,55 +25,35 @@ export default function Charts() {
   const comparisonInstance = useRef(null);
   const [selectedAlgorithms, setSelectedAlgorithms] = useState([]);
 
-  const isZh = lang === 'zh';
-  const algorithms = [...new Set(results.map(r => r.algorithmId))];
+  const algorithms = [...new Set(results.map((r) => r.algorithmId).filter(Boolean))];
 
   useEffect(() => {
-    if (results.length === 0) return;
+    if (results.length === 0) return undefined;
 
     const groupedByAlgorithm = {};
-    results.forEach(r => {
-      if (!groupedByAlgorithm[r.algorithmId]) {
-        groupedByAlgorithm[r.algorithmId] = [];
+    results.forEach((result) => {
+      if (!result.algorithmId) return;
+      if (!groupedByAlgorithm[result.algorithmId]) {
+        groupedByAlgorithm[result.algorithmId] = [];
       }
-      groupedByAlgorithm[r.algorithmId].push(r);
+      groupedByAlgorithm[result.algorithmId].push(result);
     });
-
-    const colors = [
-      { border: '#171717', bg: 'rgba(23, 23, 23, 0.1)' },
-      { border: '#0070f3', bg: 'rgba(0, 112, 243, 0.1)' },
-      { border: '#ee0000', bg: 'rgba(238, 0, 0, 0.1)' },
-      { border: '#f5a623', bg: 'rgba(245, 166, 35, 0.1)' }
-    ];
 
     const filteredAlgorithms = selectedAlgorithms.length > 0
-      ? Object.keys(groupedByAlgorithm).filter(a => selectedAlgorithms.includes(a))
+      ? Object.keys(groupedByAlgorithm).filter((id) => selectedAlgorithms.includes(id))
       : Object.keys(groupedByAlgorithm);
 
-    const complexityDatasets = filteredAlgorithms.map((algo, idx) => {
-      const data = groupedByAlgorithm[algo];
-      const color = colors[idx % colors.length];
+    const lineDatasets = (key) => filteredAlgorithms.map((algorithmId, index) => {
+      const color = CHART_COLORS[index % CHART_COLORS.length];
       return {
-        label: algo,
-        data: data.map(d => ({ x: d.inputSize, y: d.instructionCount })),
+        label: algorithmId,
+        data: groupedByAlgorithm[algorithmId].map((point) => ({
+          x: point.inputSize,
+          y: point[key]
+        })),
         borderColor: color.border,
         backgroundColor: color.bg,
-        tension: 0.4,
-        fill: true,
-        pointRadius: 4,
-        pointHoverRadius: 6
-      };
-    });
-
-    const memoryDatasets = filteredAlgorithms.map((algo, idx) => {
-      const data = groupedByAlgorithm[algo];
-      const color = colors[idx % colors.length];
-      return {
-        label: algo,
-        data: data.map(d => ({ x: d.inputSize, y: d.memoryAccess })),
-        borderColor: color.border,
-        backgroundColor: color.bg,
-        tension: 0.4,
+        tension: 0.25,
         fill: true,
         pointRadius: 4,
         pointHoverRadius: 6
@@ -86,35 +73,39 @@ export default function Charts() {
       }
     };
 
+    const commonOptions = {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'nearest', intersect: false },
+      plugins: {
+        legend: { position: 'top' },
+        tooltip: {
+          backgroundColor: '#171717',
+          titleColor: '#ffffff',
+          bodyColor: '#ffffff',
+          cornerRadius: 8,
+          callbacks: {
+            label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
+          }
+        },
+        zoom: zoomOptions
+      }
+    };
+
     if (complexityChartRef.current) {
       complexityInstance.current = new Chart(complexityChartRef.current, {
         type: 'line',
-        data: { datasets: complexityDatasets },
+        data: { datasets: lineDatasets('instructionCount') },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'nearest', intersect: false },
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: {
-              backgroundColor: '#171717',
-              titleColor: '#ffffff',
-              bodyColor: '#ffffff',
-              cornerRadius: 8,
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
-              }
-            },
-            zoom: zoomOptions
-          },
+          ...commonOptions,
           scales: {
             x: {
               type: 'linear',
-              title: { display: true, text: isZh ? '输入规模' : 'Input Size' },
+              title: { display: true, text: t('charts.inputSize') },
               grid: { color: '#ebebeb' }
             },
             y: {
-              title: { display: true, text: isZh ? '指令执行次数' : 'Instruction Count' },
+              title: { display: true, text: t('metrics.instructions') },
               grid: { color: '#ebebeb' }
             }
           }
@@ -125,32 +116,17 @@ export default function Charts() {
     if (memoryChartRef.current) {
       memoryInstance.current = new Chart(memoryChartRef.current, {
         type: 'line',
-        data: { datasets: memoryDatasets },
+        data: { datasets: lineDatasets('memoryAccess') },
         options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          interaction: { mode: 'nearest', intersect: false },
-          plugins: {
-            legend: { position: 'top' },
-            tooltip: {
-              backgroundColor: '#171717',
-              titleColor: '#ffffff',
-              bodyColor: '#ffffff',
-              cornerRadius: 8,
-              callbacks: {
-                label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toLocaleString()}`
-              }
-            },
-            zoom: zoomOptions
-          },
+          ...commonOptions,
           scales: {
             x: {
               type: 'linear',
-              title: { display: true, text: isZh ? '输入规模' : 'Input Size' },
+              title: { display: true, text: t('charts.inputSize') },
               grid: { color: '#ebebeb' }
             },
             y: {
-              title: { display: true, text: isZh ? '内存访问次数' : 'Memory Access' },
+              title: { display: true, text: t('metrics.memory') },
               grid: { color: '#ebebeb' }
             }
           }
@@ -159,8 +135,8 @@ export default function Charts() {
     }
 
     if (comparisonChartRef.current && filteredAlgorithms.length > 0) {
-      const lastResults = filteredAlgorithms.map(algo => {
-        const data = groupedByAlgorithm[algo];
+      const latestResults = filteredAlgorithms.map((algorithmId) => {
+        const data = groupedByAlgorithm[algorithmId];
         return data[data.length - 1];
       });
 
@@ -168,17 +144,17 @@ export default function Charts() {
         type: 'radar',
         data: {
           labels: [
-            isZh ? '指令数' : 'Instructions',
-            isZh ? '内存访问' : 'Memory',
-            isZh ? '分支' : 'Branches',
-            isZh ? '周期' : 'Cycles'
+            t('comparison.instructions'),
+            t('comparison.memoryAccess'),
+            t('metrics.branches'),
+            t('metrics.cycles')
           ],
-          datasets: filteredAlgorithms.map((algo, idx) => {
-            const r = lastResults[idx];
-            const color = colors[idx % colors.length];
+          datasets: filteredAlgorithms.map((algorithmId, index) => {
+            const result = latestResults[index];
+            const color = CHART_COLORS[index % CHART_COLORS.length];
             return {
-              label: algo,
-              data: [r.instructionCount, r.memoryAccess, r.branchCount, r.cycles],
+              label: algorithmId,
+              data: [result.instructionCount, result.memoryAccess, result.branchCount, result.cycles],
               borderColor: color.border,
               backgroundColor: color.bg,
               pointBackgroundColor: color.border
@@ -207,18 +183,18 @@ export default function Charts() {
       if (memoryInstance.current) memoryInstance.current.destroy();
       if (comparisonInstance.current) comparisonInstance.current.destroy();
     };
-  }, [results, selectedAlgorithms, isZh]);
+  }, [results, selectedAlgorithms, t]);
 
-  const toggleAlgorithm = (algo) => {
-    setSelectedAlgorithms(prev =>
-      prev.includes(algo) ? prev.filter(a => a !== algo) : [...prev, algo]
+  const toggleAlgorithm = (algorithmId) => {
+    setSelectedAlgorithms((previous) =>
+      previous.includes(algorithmId)
+        ? previous.filter((id) => id !== algorithmId)
+        : [...previous, algorithmId]
     );
   };
 
-  const resetZoom = (chartRef) => {
-    if (chartRef.current) {
-      chartRef.current.resetZoom();
-    }
+  const resetZoom = (chartInstanceRef) => {
+    chartInstanceRef.current?.resetZoom();
   };
 
   if (results.length === 0) {
@@ -226,13 +202,13 @@ export default function Charts() {
       <section id="analysis" className="section">
         <div className="section-header">
           <h2 className="section-title">
-            <BarChart3 size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-            {isZh ? '数据分析' : 'Data Analysis'}
+            <BarChart3 size={20} />
+            {t('charts.title')}
           </h2>
         </div>
         <div className="empty-state">
           <BarChart3 size={48} />
-          <p>{isZh ? '运行基准测试后查看图表' : 'Run a benchmark to see charts'}</p>
+          <p>{t('charts.empty')}</p>
         </div>
       </section>
     );
@@ -242,18 +218,18 @@ export default function Charts() {
     <section id="analysis" className="section">
       <div className="section-header">
         <h2 className="section-title">
-          <BarChart3 size={20} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
-          {isZh ? '数据分析' : 'Data Analysis'}
+          <BarChart3 size={20} />
+          {t('charts.title')}
         </h2>
         {algorithms.length > 0 && (
-          <div className="algorithm-filters">
-            {algorithms.map(algo => (
+          <div className="algorithm-filters" aria-label={t('charts.algorithm')}>
+            {algorithms.map((algorithmId) => (
               <button
-                key={algo}
-                onClick={() => toggleAlgorithm(algo)}
-                className={`filter-chip ${selectedAlgorithms.includes(algo) ? 'active' : ''}`}
+                key={algorithmId}
+                onClick={() => toggleAlgorithm(algorithmId)}
+                className={`filter-chip ${selectedAlgorithms.includes(algorithmId) ? 'active' : ''}`}
               >
-                {algo}
+                {algorithmId}
               </button>
             ))}
           </div>
@@ -262,32 +238,32 @@ export default function Charts() {
       <div className="charts-grid">
         <div className="chart-container">
           <div className="chart-header">
-            <h3 className="chart-title">{isZh ? '复杂度曲线' : 'Complexity Curve'}</h3>
-            <button onClick={() => resetZoom(complexityChartRef)} className="button-secondary-sm">
+            <h3 className="chart-title">{t('charts.complexity')}</h3>
+            <button onClick={() => resetZoom(complexityInstance)} className="button-secondary-sm" aria-label={t('charts.resetZoom')}>
               <RotateCcw size={14} />
             </button>
           </div>
           <div className="chart-wrapper">
             <canvas ref={complexityChartRef}></canvas>
           </div>
-          <p className="chart-hint">{isZh ? '滚轮缩放，拖拽平移' : 'Scroll to zoom, drag to pan'}</p>
+          <p className="chart-hint">{t('charts.zoomHint')}</p>
         </div>
         <div className="chart-container">
           <div className="chart-header">
-            <h3 className="chart-title">{isZh ? '内存访问模式' : 'Memory Access Pattern'}</h3>
-            <button onClick={() => resetZoom(memoryChartRef)} className="button-secondary-sm">
+            <h3 className="chart-title">{t('charts.memory')}</h3>
+            <button onClick={() => resetZoom(memoryInstance)} className="button-secondary-sm" aria-label={t('charts.resetZoom')}>
               <RotateCcw size={14} />
             </button>
           </div>
           <div className="chart-wrapper">
             <canvas ref={memoryChartRef}></canvas>
           </div>
-          <p className="chart-hint">{isZh ? '滚轮缩放，拖拽平移' : 'Scroll to zoom, drag to pan'}</p>
+          <p className="chart-hint">{t('charts.zoomHint')}</p>
         </div>
       </div>
       <div className="chart-container comparison-chart">
         <div className="chart-header">
-          <h3 className="chart-title">{isZh ? '架构对比' : 'Architecture Comparison'}</h3>
+          <h3 className="chart-title">{t('charts.comparison')}</h3>
         </div>
         <div className="chart-wrapper chart-wrapper-small">
           <canvas ref={comparisonChartRef}></canvas>

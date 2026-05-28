@@ -1,16 +1,61 @@
+const MEMORY_SIZE = 100;
+const MAX_VALUE = 999;
+const MIN_VALUE = -999;
+const MAX_CYCLES = 100000;
+
+const OPCODES = {
+  HLT: 0,
+  ADD: 1,
+  SUB: 2,
+  STA: 3,
+  STO: 3,
+  LDA: 5,
+  BRA: 6,
+  BR: 6,
+  BRZ: 7,
+  BRP: 8
+};
+
+const NO_OPERAND_OPS = new Set(['HLT', 'INP', 'OUT']);
+
+function stripComment(line) {
+  return line.replace(/;.*/, '').trim();
+}
+
+function parseNumber(value, fallback = 0) {
+  const parsed = Number.parseInt(value, 10);
+  return Number.isNaN(parsed) ? fallback : parsed;
+}
+
+function clampAddress(address) {
+  if (address < 0 || address >= MEMORY_SIZE) {
+    throw new Error(`Memory address ${address} is outside 00-99.`);
+  }
+  return address;
+}
+
+function normalizeValue(value) {
+  if (value > MAX_VALUE) return value % (MAX_VALUE + 1);
+  if (value < MIN_VALUE) return -((-value) % (MAX_VALUE + 1));
+  return value;
+}
+
 export class LMC {
   constructor() {
     this.reset();
   }
 
   reset() {
-    this.memory = new Array(100).fill(0);
+    this.memory = new Array(MEMORY_SIZE).fill(0);
+    this.sourceMap = new Array(MEMORY_SIZE).fill('');
     this.accumulator = 0;
     this.programCounter = 0;
     this.inputQueue = [];
     this.outputQueue = [];
+    this.trace = [];
     this.isRunning = false;
     this.isHalted = false;
+    this.haltedByLimit = false;
     this.metrics = {
       instructionCount: 0,
       memoryAccess: 0,
@@ -23,79 +68,74 @@ export class LMC {
     this.reset();
     const lines = code.split('\n');
     const labels = {};
+    const parsedLines = [];
     let address = 0;
 
-    // First pass: collect labels
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith(';')) continue;
-      
-      const parts = trimmed.split(/\s+/);
-      const firstToken = parts[0].toUpperCase();
-      
-      if (!this.isOpcode(firstToken)) {
-        labels[firstToken] = address;
-        if (parts.length > 1) {
-          address++;
-        }
-      } else {
-        address++;
+    for (const rawLine of lines) {
+      const line = stripComment(rawLine);
+      if (!line) continue;
+
+      const parts = line.split(/\s+/);
+      let label = null;
+      let opcode = parts[0].toUpperCase();
+      let operandToken = parts[1];
+
+      if (!this.isOpcode(opcode)) {
+        label = opcode;
+        opcode = (parts[1] || '').toUpperCase();
+        operandToken = parts[2];
       }
+
+      if (!this.isOpcode(opcode)) {
+        throw new Error(`Unknown instruction: ${line}`);
+      }
+
+      clampAddress(address);
+      if (label) labels[label] = address;
+      parsedLines.push({ address, opcode, operandToken, rawLine: rawLine.trim() });
+      address++;
     }
 
-    // Second pass: generate code
-    address = 0;
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith(';')) continue;
-      
-      const parts = trimmed.split(/\s+/);
-      let opcode, operand;
-      let idx = 0;
-
-      if (this.isOpcode(parts[0].toUpperCase())) {
-        opcode = parts[0].toUpperCase();
-        idx = 1;
-      } else if (parts.length >= 2) {
-        opcode = parts[1].toUpperCase();
-        idx = 2;
-      } else {
-        continue;
-      }
-
-      if (opcode === 'DAT') {
-        const val = parts[idx] ? parseInt(parts[idx]) : 0;
-        this.memory[address] = val;
-      } else if (opcode === 'INP') {
-        this.memory[address] = 901;
-      } else if (opcode === 'OUT') {
-        this.memory[address] = 902;
-      } else if (opcode === 'HLT') {
-        this.memory[address] = 0;
-      } else {
-        const op = this.getOpcodeValue(opcode);
-        let addr = 0;
-        if (parts[idx]) {
-          const token = parts[idx].toUpperCase();
-          addr = labels[token] !== undefined ? labels[token] : (parseInt(token) || 0);
-        }
-        this.memory[address] = op * 100 + addr;
-      }
-      address++;
+    for (const parsed of parsedLines) {
+      this.memory[parsed.address] = this.encodeInstruction(parsed, labels);
+      this.sourceMap[parsed.address] = parsed.rawLine;
     }
   }
 
-  isOpcode(token) {
-    const opcodes = ['HLT', 'ADD', 'SUB', 'STA', 'LDA', 'BRA', 'BRZ', 'BRP', 'INP', 'OUT', 'DAT', 'MUL'];
-    return opcodes.includes(token.toUpperCase());
+  encodeInstruction({ opcode, operandToken }, labels) {
+    if (opcode === 'DAT') {
+      return normalizeValue(parseNumber(operandToken, 0));
+    }
+
+    if (opcode === 'INP') return 901;
+    if (opcode === 'OUT') return 902;
+    if (opcode === 'HLT') return 0;
+
+    const op = this.getOpcodeValue(opcode);
+    let operand = 0;
+
+    if (!NO_OPERAND_OPS.has(opcode)) {
+      if (!operandToken) {
+        throw new Error(`${opcode} requires an operand.`);
+      }
+      const token = operandToken.toUpperCase();
+      operand = labels[token] !== undefined ? labels[token] : parseNumber(token, Number.NaN);
+      if (Number.isNaN(operand)) {
+        throw new Error(`Unknown label or address: ${operandToken}`);
+      }
+      clampAddress(operand);
+    }
+
+    return op * 100 + operand;
+  }
+
+  isOpcode(token = '') {
+    const normalized = token.toUpperCase();
+    return normalized === 'DAT' || normalized === 'INP' || normalized === 'OUT' || normalized in OPCODES;
   }
 
   getOpcodeValue(opcode) {
-    const map = {
-      'HLT': 0, 'ADD': 1, 'SUB': 2, 'STA': 3, 'MUL': 4,
-      'LDA': 5, 'BRA': 6, 'BRZ': 7, 'BRP': 8
-    };
-    return map[opcode] || 0;
+    return OPCODES[opcode] ?? 0;
   }
 
   setInput(values) {
@@ -116,89 +156,107 @@ export class LMC {
 
   step() {
     if (this.isHalted) return false;
+    clampAddress(this.programCounter);
 
+    const pcBefore = this.programCounter;
     const instruction = this.memory[this.programCounter];
     this.metrics.memoryAccess++;
     this.metrics.instructionCount++;
     this.metrics.cycles++;
 
-    const opcode = Math.floor(instruction / 100);
-    const operand = instruction % 100;
+    const opcode = Math.floor(Math.abs(instruction) / 100);
+    const operand = Math.abs(instruction) % 100;
     this.programCounter++;
 
     switch (opcode) {
-      case 0: // HLT
+      case 0:
         this.isHalted = true;
         this.isRunning = false;
         break;
-      case 1: // ADD
-        this.accumulator += this.memory[operand];
+      case 1:
+        this.accumulator = normalizeValue(this.accumulator + this.memory[operand]);
         this.metrics.memoryAccess++;
         break;
-      case 2: // SUB
-        this.accumulator -= this.memory[operand];
+      case 2:
+        this.accumulator = normalizeValue(this.accumulator - this.memory[operand]);
         this.metrics.memoryAccess++;
         break;
-      case 3: // STA
-        this.memory[operand] = this.accumulator;
+      case 3:
+        this.memory[operand] = normalizeValue(this.accumulator);
         this.metrics.memoryAccess++;
         break;
-      case 4: // MUL
-        this.accumulator *= this.memory[operand];
-        this.metrics.memoryAccess++;
-        break;
-      case 5: // LDA
+      case 5:
         this.accumulator = this.memory[operand];
         this.metrics.memoryAccess++;
         break;
-      case 6: // BRA
+      case 6:
         this.programCounter = operand;
         this.metrics.branchCount++;
         break;
-      case 7: // BRZ
+      case 7:
         if (this.accumulator === 0) {
           this.programCounter = operand;
           this.metrics.branchCount++;
         }
         break;
-      case 8: // BRP
+      case 8:
         if (this.accumulator >= 0) {
           this.programCounter = operand;
           this.metrics.branchCount++;
         }
         break;
-      case 9: // INP/OUT
+      case 9:
         if (operand === 1) {
-          this.accumulator = this.getInput();
+          this.accumulator = normalizeValue(this.getInput());
         } else if (operand === 2) {
           this.addOutput(this.accumulator);
+        } else {
+          throw new Error(`Unknown I/O instruction: ${instruction}`);
         }
         break;
       default:
-        this.isHalted = true;
-        this.isRunning = false;
-        break;
+        throw new Error(`Unknown opcode ${opcode} at address ${pcBefore}.`);
+    }
+
+    if (this.trace.length < 500) {
+      this.trace.push({
+        pc: pcBefore,
+        instruction,
+        source: this.sourceMap[pcBefore],
+        accumulator: this.accumulator,
+        nextPc: this.programCounter
+      });
     }
 
     return !this.isHalted;
   }
 
-  run() {
-    this.isRunning = true;
-    const maxCycles = 100000;
+  run(code, inputValues) {
+    if (typeof code === 'string') {
+      this.loadCode(code);
+    }
 
-    while (this.isRunning && !this.isHalted && this.metrics.cycles < maxCycles) {
+    if (inputValues !== undefined) {
+      this.setInput(inputValues);
+    }
+
+    this.isRunning = true;
+
+    while (this.isRunning && !this.isHalted && this.metrics.cycles < MAX_CYCLES) {
       this.step();
     }
 
-    if (this.metrics.cycles >= maxCycles) {
+    if (this.metrics.cycles >= MAX_CYCLES) {
+      this.haltedByLimit = true;
       this.isHalted = true;
       this.isRunning = false;
     }
 
     return {
       ...this.metrics,
-      output: this.getOutput()
+      output: this.getOutput(),
+      trace: [...this.trace],
+      haltedByLimit: this.haltedByLimit
     };
   }
 }
