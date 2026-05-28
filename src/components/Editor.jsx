@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useI18n } from '../context/I18nContext';
 import { Check, ChevronDown, Copy, Play, RotateCcw, Terminal } from 'lucide-react';
 import { LMC } from '../utils/lmc';
@@ -17,8 +18,11 @@ export default function Editor() {
   const [metrics, setMetrics] = useState(null);
   const [copied, setCopied] = useState(false);
   const [showPresets, setShowPresets] = useState(false);
+  const [presetMenuStyle, setPresetMenuStyle] = useState(null);
   const sectionRef = useRef(null);
   const textareaRef = useRef(null);
+  const presetButtonRef = useRef(null);
+  const presetMenuRef = useRef(null);
 
   const presets = useMemo(() => PRESET_IDS.map((id) => ALGORITHMS[id]), []);
 
@@ -47,10 +51,10 @@ export default function Editor() {
   }, []);
 
   useEffect(() => {
-    if (!showPresets || !sectionRef.current) return undefined;
+    if (!showPresets || !presetMenuRef.current) return undefined;
 
-    const menu = sectionRef.current.querySelector('.preset-menu');
-    if (!menu || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
+    const menu = presetMenuRef.current;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return undefined;
 
     const tween = gsap.fromTo(menu, {
       autoAlpha: 0,
@@ -66,6 +70,57 @@ export default function Editor() {
 
     return () => tween.kill();
   }, [showPresets]);
+
+  const updatePresetMenuPosition = useCallback(() => {
+    const button = presetButtonRef.current;
+    if (!button) return;
+
+    const rect = button.getBoundingClientRect();
+    const menuWidth = 340;
+    const viewportPadding = 12;
+    const left = Math.min(
+      Math.max(rect.left, viewportPadding),
+      window.innerWidth - menuWidth - viewportPadding
+    );
+
+    setPresetMenuStyle({
+      top: rect.bottom + 8,
+      left,
+      width: menuWidth
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!showPresets) return undefined;
+
+    updatePresetMenuPosition();
+
+    const handlePointerDown = (event) => {
+      if (
+        presetButtonRef.current?.contains(event.target) ||
+        presetMenuRef.current?.contains(event.target)
+      ) {
+        return;
+      }
+      setShowPresets(false);
+    };
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') setShowPresets(false);
+    };
+
+    window.addEventListener('resize', updatePresetMenuPosition);
+    window.addEventListener('scroll', updatePresetMenuPosition, true);
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('resize', updatePresetMenuPosition);
+      window.removeEventListener('scroll', updatePresetMenuPosition, true);
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showPresets, updatePresetMenuPosition]);
 
   const handleRun = useCallback(() => {
     const lmc = new LMC();
@@ -115,6 +170,11 @@ export default function Editor() {
     setMetrics(null);
   }, []);
 
+  const handlePresetToggle = useCallback(() => {
+    if (!showPresets) updatePresetMenuPosition();
+    setShowPresets((visible) => !visible);
+  }, [showPresets, updatePresetMenuPosition]);
+
   const handleKeyDown = useCallback((event) => {
     if (event.key !== 'Tab') return;
 
@@ -139,26 +199,35 @@ export default function Editor() {
         <div className="section-actions">
           <div className="preset-dropdown">
             <button
-              onClick={() => setShowPresets((visible) => !visible)}
+              ref={presetButtonRef}
+              onClick={handlePresetToggle}
               className="button-secondary-sm"
               aria-expanded={showPresets}
+              aria-haspopup="menu"
             >
               <ChevronDown size={14} />
               <span>{t('editor.presets')}</span>
             </button>
-            {showPresets && (
-              <div className="preset-menu">
+            {showPresets && presetMenuStyle && createPortal(
+              <div
+                ref={presetMenuRef}
+                className="preset-menu preset-menu-portal"
+                style={presetMenuStyle}
+                role="menu"
+              >
                 {presets.map((preset) => (
                   <button
                     key={preset.id}
                     onClick={() => handlePresetSelect(preset.id)}
                     className={`preset-item ${selectedPreset === preset.id ? 'active' : ''}`}
+                    role="menuitem"
                   >
                     <span className="preset-name">{t(preset.nameKey)}</span>
                     <span className="preset-desc">{t(preset.descKey)}</span>
                   </button>
                 ))}
-              </div>
+              </div>,
+              document.body
             )}
           </div>
           <button onClick={handleCopy} className="button-secondary-sm">

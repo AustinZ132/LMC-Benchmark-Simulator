@@ -99,11 +99,10 @@ export const en = {
   },
   security: {
     title: 'Verify before export',
-    description: 'Complete one Cloudflare Turnstile check before exporting files to prevent automated abuse.',
+    description: 'Complete one Cloudflare Turnstile check to unlock the export buttons.',
     checking: 'Verifying...',
     failed: 'Verification did not pass. Refresh the challenge and try again.',
     expired: 'The verification expired. Complete the challenge again.',
-    close: 'Close verification',
     footer: 'Protected by Cloudflare Turnstile'
   },
   algorithms: {

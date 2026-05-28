@@ -99,11 +99,10 @@ export const zh = {
   },
   security: {
     title: '导出前验证',
-    description: '为了防止自动化滥用，导出文件前需要完成一次 Cloudflare Turnstile 验证。',
+    description: '为了防止自动化滥用，完成一次 Cloudflare Turnstile 验证后会显示导出按钮。',
     checking: '正在验证...',
     failed: '验证没有通过，请刷新挑战后重试。',
     expired: '验证已过期，请重新完成挑战。',
-    close: '关闭验证',
     footer: '受 Cloudflare Turnstile 保护'
   },
   algorithms: {
