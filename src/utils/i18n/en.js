@@ -97,6 +97,14 @@ export const en = {
     data: 'Export CSV',
     report: 'Export PDF'
   },
+  security: {
+    title: 'LMC Benchmark Studio',
+    description: 'Complete the human verification before opening the simulator and benchmark tools.',
+    checking: 'Verifying...',
+    failed: 'Verification did not pass. Refresh the challenge and try again.',
+    expired: 'The verification expired. Complete the challenge again.',
+    footer: 'Protected by Cloudflare Turnstile'
+  },
   algorithms: {
     simpleArithmetic: {
       name: 'Simple Addition',

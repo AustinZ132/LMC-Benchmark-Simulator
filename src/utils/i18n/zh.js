@@ -97,6 +97,14 @@ export const zh = {
     data: '导出 CSV',
     report: '导出 PDF'
   },
+  security: {
+    title: 'LMC Benchmark Studio',
+    description: '请先完成人机验证，然后继续访问模拟器和基准测试。',
+    checking: '正在验证...',
+    failed: '验证没有通过，请刷新挑战后重试。',
+    expired: '验证已过期，请重新完成挑战。',
+    footer: '受 Cloudflare Turnstile 保护'
+  },
   algorithms: {
     simpleArithmetic: {
       name: '简单加法',

@@ -130,7 +130,7 @@ export default function Editor() {
   }, [code]);
 
   return (
-    <section id="editor" className="section" ref={sectionRef}>
+    <section id="editor" className="section editor-section" ref={sectionRef}>
       <div className="section-header" data-editor-motion>
         <h2 className="section-title">
           <Terminal size={20} />
