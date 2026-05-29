@@ -211,8 +211,9 @@ export function benchmarkNativeCode(algorithm, inputSize) {
   const cycles = Math.round(totalCycles / Math.max(iterations, 1));
 
   return {
-    executionTime: referenceTimeFromCycles(cycles),
+    executionTime: averageTime,
     measuredTime: averageTime,
+    referenceTime: referenceTimeFromCycles(cycles),
     sampleWindowTime: elapsedTime,
     instructions,
     memoryAccess,

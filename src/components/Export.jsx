@@ -52,8 +52,8 @@ export default function Export() {
       'LMCCycles',
       'CPUCycles',
       'LMCReferenceTimeMs',
-      'CPUReferenceTimeMs',
-      'CPUJSMeasuredAvgMs'
+      'CPUMeasuredTimeMs',
+      'CPUReferenceTimeMs'
     ];
     const csvContent = [
       headers.join(','),
@@ -72,7 +72,7 @@ export default function Export() {
         result.nativeCycles,
         referenceTimeFromCycles(result.cycles),
         result.nativeExecutionTime,
-        result.nativeMeasuredTime
+        result.nativeReferenceTime ?? referenceTimeFromCycles(result.nativeCycles)
       ].join(','))
     ].join('\n');
 

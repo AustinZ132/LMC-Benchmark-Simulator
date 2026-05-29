@@ -181,8 +181,9 @@ export default function Benchmark() {
   }));
   const inputSizeItems = selectedAlgorithm.inputSizes.map((size) => ({
     value: size,
-    label: String(size),
-    meta: `n = ${size}`
+    label: selectedAlgorithm.id === 'simpleArithmetic' ? t('benchmark.fixedInput') : String(size),
+    meta: selectedAlgorithm.id === 'simpleArithmetic' ? t('benchmark.fixedInputMeta') : `n = ${size}`,
+    isFixed: selectedAlgorithm.id === 'simpleArithmetic'
   }));
 
   useEffect(() => {
@@ -269,6 +270,7 @@ export default function Benchmark() {
       ? {
           executionTime: latest.nativeExecutionTime,
           measuredTime: latest.nativeMeasuredTime,
+          referenceTime: latest.nativeReferenceTime,
           sampleWindowTime: latest.nativeSampleWindowTime,
           instructions: latest.nativeInstructions,
           memoryAccess: latest.nativeMemoryAccess,
@@ -356,7 +358,9 @@ export default function Benchmark() {
               menuWidth={180}
               renderValue={(item) => (
                 <>
-                  <span className="benchmark-select-primary">n = {item.label}</span>
+                  <span className="benchmark-select-primary">
+                    {item.isFixed ? item.label : `n = ${item.label}`}
+                  </span>
                 </>
               )}
               renderItem={(item) => (
@@ -475,7 +479,7 @@ export default function Benchmark() {
               <div className="card-body">
                 <div className="metric-row">
                   <Clock size={14} />
-                  <span className="metric-label">{t('comparison.referenceTime')}</span>
+                  <span className="metric-label">{t('comparison.measuredTime')}</span>
                   <span className="metric-value highlight">{formatDuration(comparison.native.executionTime)}</span>
                 </div>
                 <div className="metric-row">
@@ -499,11 +503,10 @@ export default function Benchmark() {
                   <span className="metric-value">{comparison.native.cycles.toLocaleString()}</span>
                 </div>
                 <div className="spec-tags">
-                  <span className="tag model">{REFERENCE_CLOCK_LABEL}</span>
                   <span className="tag enabled">L1/L2/L3 Cache</span>
                   <span className="tag enabled">Pipeline</span>
                   <span className="tag enabled">Branch Prediction</span>
-                  <span className="tag neutral">{t('comparison.jsMeasuredAvg')}: {formatDuration(comparison.native.measuredTime)}</span>
+                  <span className="tag neutral">{t('comparison.referenceTime')}: {formatDuration(comparison.native.referenceTime)}</span>
                   <span className="tag neutral">{t('comparison.samples')}: {comparison.native.iterations.toLocaleString()}</span>
                 </div>
               </div>

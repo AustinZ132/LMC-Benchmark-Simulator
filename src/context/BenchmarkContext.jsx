@@ -36,7 +36,8 @@ export function BenchmarkProvider({ children }) {
 
     setIsRunning(true);
     setStatus('running');
-    setStatusText(`Running ${algorithmId} with n=${inputSize}...`);
+    const sizeLabel = algorithmId === 'simpleArithmetic' ? 'fixed input' : `n=${inputSize}`;
+    setStatusText(`Running ${algorithmId} with ${sizeLabel}...`);
     setProgress(0);
 
     const testResults = [];
@@ -61,6 +62,7 @@ export function BenchmarkProvider({ children }) {
         codeSize: algorithm.code.split('\n').filter((line) => line.trim() && !line.trim().startsWith(';')).length,
         nativeExecutionTime: nativeResult.executionTime,
         nativeMeasuredTime: nativeResult.measuredTime,
+        nativeReferenceTime: nativeResult.referenceTime,
         nativeSampleWindowTime: nativeResult.sampleWindowTime,
         nativeInstructions: nativeResult.instructions,
         nativeMemoryAccess: nativeResult.memoryAccess,
@@ -86,7 +88,7 @@ export function BenchmarkProvider({ children }) {
     setMetrics(makeMetricSnapshot(latest));
     setIsRunning(false);
     setStatus('completed');
-    setStatusText(`Completed ${algorithmId} at n=${inputSize}`);
+    setStatusText(`Completed ${algorithmId} at ${sizeLabel}`);
     setProgress(100);
 
     return {
