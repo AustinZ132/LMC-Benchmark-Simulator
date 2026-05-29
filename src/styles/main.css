@@ -1401,9 +1401,17 @@ textarea {
   font-size: var(--text-lg);
   font-weight: var(--font-semibold);
   color: var(--color-ink);
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--space-2);
   display: flex;
   align-items: center;
+}
+
+.comparison-note {
+  max-width: 760px;
+  margin-bottom: var(--space-4);
+  color: var(--color-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
 }
 
 .comparison-grid {
@@ -1506,6 +1514,18 @@ textarea {
   background-color: #e6f9ed;
   color: #00a63e;
   border: 1px solid #b3e6c7;
+}
+
+.tag.model {
+  background-color: #eaf2ff;
+  color: #0054c8;
+  border: 1px solid #b8d3ff;
+}
+
+.tag.neutral {
+  background-color: var(--color-canvas);
+  color: var(--color-body);
+  border: 1px solid var(--color-hairline);
 }
 
 .tag.disabled {

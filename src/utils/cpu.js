@@ -164,6 +164,13 @@ function runNativeWorkload(algorithm, inputSize) {
   };
 }
 
+export const REFERENCE_CLOCK_HZ = 2_300_000_000;
+export const REFERENCE_CLOCK_LABEL = '2.3 GHz reference model';
+
+export function referenceTimeFromCycles(cycles) {
+  return (Math.max(0, cycles) / REFERENCE_CLOCK_HZ) * 1000;
+}
+
 export function benchmarkNativeCode(algorithm, inputSize) {
   const minMeasureMs = 32;
   const maxIterations = 1_000_000;
@@ -198,20 +205,23 @@ export function benchmarkNativeCode(algorithm, inputSize) {
   }
 
   const averageTime = Math.max(elapsedTime / Math.max(iterations, 1), 0.000001);
+  const instructions = Math.round(totalInstructions / Math.max(iterations, 1));
+  const memoryAccess = Math.round(totalMemoryOps / Math.max(iterations, 1));
+  const branchCount = Math.round(totalBranches / Math.max(iterations, 1));
+  const cycles = Math.round(totalCycles / Math.max(iterations, 1));
 
   return {
-    executionTime: averageTime,
-    measuredTime: elapsedTime,
-    instructions: Math.round(totalInstructions / Math.max(iterations, 1)),
-    memoryAccess: Math.round(totalMemoryOps / Math.max(iterations, 1)),
-    branchCount: Math.round(totalBranches / Math.max(iterations, 1)),
-    cycles: Math.round(totalCycles / Math.max(iterations, 1)),
+    executionTime: referenceTimeFromCycles(cycles),
+    measuredTime: averageTime,
+    sampleWindowTime: elapsedTime,
+    instructions,
+    memoryAccess,
+    branchCount,
+    cycles,
     iterations,
     checksum
   };
 }
-
-const LMC_REFERENCE_CLOCK_HZ = 2_300_000_000;
 
 export function formatDuration(ms) {
   if (!Number.isFinite(ms) || ms <= 0) return '0 ms';
@@ -239,9 +249,9 @@ export function makeLMCComparisonData(result) {
     memoryAccess: result?.memoryAccess || 0,
     branches: result?.branchCount || 0,
     cycles,
-    executionTime: (cycles / LMC_REFERENCE_CLOCK_HZ) * 1000,
+    executionTime: referenceTimeFromCycles(cycles),
     output: result?.output || [],
-    clockSpeed: '2.3 GHz reference',
+    clockSpeed: REFERENCE_CLOCK_LABEL,
     hasCache: false,
     hasPipeline: false,
     hasBranchPrediction: false

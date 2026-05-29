@@ -3,6 +3,7 @@ import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import Turnstile from './Turnstile';
 import { Download, FileImage, FileSpreadsheet, FileText, ShieldCheck } from 'lucide-react';
+import { referenceTimeFromCycles } from '../utils/cpu';
 
 export default function Export() {
   const { t } = useI18n();
@@ -42,10 +43,17 @@ export default function Export() {
       'InputSize',
       'Input',
       'Output',
-      'Instructions',
-      'MemoryAccess',
-      'Branches',
-      'Cycles'
+      'LMCInstructions',
+      'CPUInstructions',
+      'LMCMemoryAccess',
+      'CPUMemoryAccess',
+      'LMCBranches',
+      'CPUBranches',
+      'LMCCycles',
+      'CPUCycles',
+      'LMCReferenceTimeMs',
+      'CPUReferenceTimeMs',
+      'CPUJSMeasuredAvgMs'
     ];
     const csvContent = [
       headers.join(','),
@@ -55,9 +63,16 @@ export default function Export() {
         `"${result.input.join(' ')}"`,
         `"${result.output.join(' ')}"`,
         result.instructionCount,
+        result.nativeInstructions,
         result.memoryAccess,
+        result.nativeMemoryAccess,
         result.branchCount,
-        result.cycles
+        result.nativeBranchCount,
+        result.cycles,
+        result.nativeCycles,
+        referenceTimeFromCycles(result.cycles),
+        result.nativeExecutionTime,
+        result.nativeMeasuredTime
       ].join(','))
     ].join('\n');
 

@@ -61,6 +61,7 @@ export function BenchmarkProvider({ children }) {
         codeSize: algorithm.code.split('\n').filter((line) => line.trim() && !line.trim().startsWith(';')).length,
         nativeExecutionTime: nativeResult.executionTime,
         nativeMeasuredTime: nativeResult.measuredTime,
+        nativeSampleWindowTime: nativeResult.sampleWindowTime,
         nativeInstructions: nativeResult.instructions,
         nativeMemoryAccess: nativeResult.memoryAccess,
         nativeBranchCount: nativeResult.branchCount,

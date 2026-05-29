@@ -3,7 +3,14 @@ import { createPortal } from 'react-dom';
 import { useI18n } from '../context/I18nContext';
 import { useBenchmark } from '../context/BenchmarkContext';
 import { ALGORITHMS } from '../utils/algorithms';
-import { getCPUInfo, benchmarkNativeCode, makeLMCComparisonData, formatDuration, formatMultiplier } from '../utils/cpu';
+import {
+  getCPUInfo,
+  benchmarkNativeCode,
+  makeLMCComparisonData,
+  formatDuration,
+  formatMultiplier,
+  REFERENCE_CLOCK_LABEL
+} from '../utils/cpu';
 import { Check, ChevronDown, Play, Square, Cpu, Zap, HardDrive, Clock, Activity, Database, Gauge, GitBranch } from 'lucide-react';
 import gsap from 'gsap';
 
@@ -262,6 +269,7 @@ export default function Benchmark() {
       ? {
           executionTime: latest.nativeExecutionTime,
           measuredTime: latest.nativeMeasuredTime,
+          sampleWindowTime: latest.nativeSampleWindowTime,
           instructions: latest.nativeInstructions,
           memoryAccess: latest.nativeMemoryAccess,
           branchCount: latest.nativeBranchCount,
@@ -415,6 +423,9 @@ export default function Benchmark() {
             <Gauge size={18} />
             {t('comparison.title') || 'Performance Comparison'}
           </h3>
+          <p className="comparison-note" data-compare-motion>
+            {t('comparison.referenceNote')}
+          </p>
           
           <div className="comparison-grid">
             <div className="comparison-card lmc-card" data-compare-motion>
@@ -425,7 +436,7 @@ export default function Benchmark() {
               <div className="card-body">
                 <div className="metric-row">
                   <Clock size={14} />
-                  <span className="metric-label">{t('comparison.executionTime')}</span>
+                  <span className="metric-label">{t('comparison.referenceTime')}</span>
                   <span className="metric-value">{formatDuration(comparison.lmc.executionTime)}</span>
                 </div>
                 <div className="metric-row">
@@ -449,6 +460,7 @@ export default function Benchmark() {
                   <span className="metric-value">{comparison.lmc.cycles.toLocaleString()}</span>
                 </div>
                 <div className="spec-tags">
+                  <span className="tag model">{REFERENCE_CLOCK_LABEL}</span>
                   <span className="tag disabled">{t('comparison.cache')}: None</span>
                   <span className="tag disabled">{t('comparison.pipeline')}: None</span>
                 </div>
@@ -463,7 +475,7 @@ export default function Benchmark() {
               <div className="card-body">
                 <div className="metric-row">
                   <Clock size={14} />
-                  <span className="metric-label">{t('comparison.executionTime')}</span>
+                  <span className="metric-label">{t('comparison.referenceTime')}</span>
                   <span className="metric-value highlight">{formatDuration(comparison.native.executionTime)}</span>
                 </div>
                 <div className="metric-row">
@@ -487,10 +499,12 @@ export default function Benchmark() {
                   <span className="metric-value">{comparison.native.cycles.toLocaleString()}</span>
                 </div>
                 <div className="spec-tags">
+                  <span className="tag model">{REFERENCE_CLOCK_LABEL}</span>
                   <span className="tag enabled">L1/L2/L3 Cache</span>
                   <span className="tag enabled">Pipeline</span>
                   <span className="tag enabled">Branch Prediction</span>
-                  <span className="tag enabled">{t('comparison.samples')}: {comparison.native.iterations.toLocaleString()}</span>
+                  <span className="tag neutral">{t('comparison.jsMeasuredAvg')}: {formatDuration(comparison.native.measuredTime)}</span>
+                  <span className="tag neutral">{t('comparison.samples')}: {comparison.native.iterations.toLocaleString()}</span>
                 </div>
               </div>
             </div>
