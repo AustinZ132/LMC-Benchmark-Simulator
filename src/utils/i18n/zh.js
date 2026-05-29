@@ -88,6 +88,7 @@ export const zh = {
     speedup: '加速比',
     whyFaster: '现代 CPU 为什么更快',
     referenceNote: 'LMC 时间是理想的 2.3GHz reference estimate；CPU 时间是在浏览器中实测得到。对于 very small programs，浏览器、JIT 和计时器开销可能主导结果，因此循环型和内存型 workload 更适合做 CPU 对比。',
+    measurementWarning: 'CPU time 是在浏览器中实测得到的，所以 very small programs 可能被浏览器、JIT 和计时器开销主导。建议使用更大的循环型或内存型 workload 来进行更有意义的 CPU 对比。',
     yourCpuIs: 'CPU 实测速度比',
     fasterThanLmc: '相对 LMC reference',
     reasons: {

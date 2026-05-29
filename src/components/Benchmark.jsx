@@ -521,6 +521,12 @@ export default function Benchmark() {
             </div>
           </div>
 
+          {comparison.speedup < 1 && (
+            <p className="measurement-warning" data-compare-motion>
+              {t('comparison.measurementWarning')}
+            </p>
+          )}
+
           <div className="why-faster" data-compare-motion>
             <h4>{t('comparison.whyFaster') || 'Why is modern CPU faster?'}</h4>
             <ul>

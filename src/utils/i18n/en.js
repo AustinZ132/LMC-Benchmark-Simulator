@@ -88,6 +88,7 @@ export const en = {
     speedup: 'Speedup',
     whyFaster: 'Why modern CPUs are faster',
     referenceNote: 'LMC time is an ideal 2.3GHz reference estimate. CPU time is measured in the browser, so very small programs may be dominated by browser/JIT/timer overhead; larger loop and memory workloads are more meaningful.',
+    measurementWarning: 'CPU time is measured in the browser, so very small programs may be dominated by browser, JIT, and timer overhead. Use larger loop-based or memory-heavy workloads for a more meaningful CPU comparison.',
     yourCpuIs: 'CPU measured speed ratio',
     fasterThanLmc: 'against LMC reference',
     reasons: {
